@@ -1,5 +1,7 @@
 # FAIO 2024 — problem index
 
+FAIO = **Fizmat AI Olympiad**, official site https://faio.kz/
+
 Classification of every problem in [`faio-2024/`](../faio-2024), taken from the statements in this repo.
 
 **16 problems total:** 10 qualification + 6 day 1. There is no day 2 in 2024.

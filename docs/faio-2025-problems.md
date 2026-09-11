@@ -1,5 +1,7 @@
 # FAIO 2025 — problem index
 
+FAIO = **Fizmat AI Olympiad**, official site https://faio.kz/
+
 Classification of every problem in [`faio-2025/`](../faio-2025), taken from the statements in this repo.
 
 **11 problems total:** 6 qualification + 3 day 1 + 2 day 2.
