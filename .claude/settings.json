@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "k12-teacher-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/k12-teacher-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "k12-education@k12-teacher-skills": true
+  }
+}
