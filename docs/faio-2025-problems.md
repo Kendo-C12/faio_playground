@@ -47,7 +47,7 @@ By topic: probability 2 (2, 3), statistics 1 (1), NLP 1 (4), sensor time series 
 
 ### Solving notes
 
-- **1** — mean `17/10 = 1.7`, mode `1` (appears four times), median `1` (average of the 5th and 6th of the sorted list). Print in the stated order: mean, mode, median.
+- **1** — mean `15/10 = 1.5`, mode `1` (appears four times), median `1` (average of the 5th and 6th of the sorted list). Print in the stated order: mean, mode, median.
 - **2** — the statement gives the setup (three rolls) and the theory section defines classical probability; read the exact event being asked before counting. With 216 equally likely outcomes, count favourable outcomes rather than multiplying probabilities from memory.
 - **3** — `P(sick|+) = 0.01·0.99 / (0.01·0.99 + 0.99·0.02) ≈ 0.3333`. Note specificity is 98 %, so the false-positive rate is 2 % — this is the step most people get wrong. Round to 4 decimals as instructed.
 - **4** — character n-gram TF-IDF plus logistic regression separates ru / kaz / eng almost perfectly; Kazakh-specific Cyrillic letters (ә, ғ, қ, ң, ө, ұ, ү, һ, і) are the strongest signal against Russian. The shipped notebook is the reference if you want to compare.
