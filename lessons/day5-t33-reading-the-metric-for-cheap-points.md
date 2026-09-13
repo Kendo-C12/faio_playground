@@ -22,25 +22,37 @@ The metric tells you which errors cost money. Read it before you model, and half
 
 **Relative error means small-N dominates.** Task 6's metric:
 
-```
-Error Rate = |ŷ − y| / y
-Accuracy   = 1 − min(1, Error Rate)
-```
+$$
+\text{Error Rate} = \frac{\lvert \hat{y} - y \rvert}{y}
+$$
 
-The denominator is the true count, which ranges over `100 ≤ N ≤ 500`. Miss by 10 figures at `y = 500` and you lose 0.02. Miss by the same 10 at `y = 100` and you lose 0.10 — five times worse for identical absolute performance. **Therefore: validate on the low-count images.** Your tuning set should be skewed toward small `y`, not a uniform sample, because that is where the loss lives. The same arithmetic says systematic bias is worse than noise: a `+5` offset on every image costs you on every low-count image, while random `±5` partially averages out across 8000 of them.
+$$
+\text{Accuracy} = 1 - \min(1, \text{Error Rate})
+$$
 
-**A floor means careless scores exactly zero.** Task 6 rescales: `(Accuracy − 0.55) / (1 − 0.55)`, with 0 below the floor. Accuracy 0.54 and accuracy 0.01 are worth the same — nothing. So the first job is *clearing the floor*, which needs relative error under 0.45 — i.e. counts within roughly ±45% of truth. A plain contour count clears that easily; the common way to fail it is a structural bug, such as using `RETR_LIST` and double-counting every hollow shape. Check the floor before you tune anything above it.
+The denominator is the true count, which ranges over $100 \le N \le 500$. Miss by 10 figures at $y = 500$ and you lose 0.02. Miss by the same 10 at $y = 100$ and you lose 0.10 — five times worse for identical absolute performance. **Therefore: validate on the low-count images.** Your tuning set should be skewed toward small $y$, not a uniform sample, because that is where the loss lives. The same arithmetic says systematic bias is worse than noise: a $+5$ offset on every image costs you on every low-count image, while random $\pm 5$ partially averages out across 8000 of them.
+
+**A floor means careless scores exactly zero.** Task 6 rescales:
+
+$$
+\text{Final Verdict} = \frac{\text{Accuracy} - 0.55}{1 - 0.55}
+$$
+
+with 0 below the floor. Accuracy 0.54 and accuracy 0.01 are worth the same — nothing. So the first job is *clearing the floor*, which needs relative error under 0.45 — i.e. counts within roughly $\pm 45\%$ of truth. A plain contour count clears that easily; the common way to fail it is a structural bug, such as using `RETR_LIST` and double-counting every hollow shape. Check the floor before you tune anything above it.
 
 **Macro-F1 means a small class can sink you.** The shipped reference notebook for task 4, [`task4_solution_Who_Speaks_What.ipynb`](../faio-2025/qualification/task4_solution_Who_Speaks_What.ipynb), scores with `classification_report` and its grid search tunes on `scoring="f1_macro"` — not accuracy. Macro-F1 averages per-class F1 *unweighted*, so a class with 5% of the rows carries the same third of the score as a class with 60%. Under accuracy you would ignore it; under macro-F1, collapsing the rare class costs you 0.33. Practical consequences: look at the per-class recall, not the aggregate; consider `class_weight="balanced"`; and remember that augmenting the weak class (the notebook's `kazakh_to_russian` and `translit` tricks) moves macro-F1 far more than it moves accuracy.
 
-**Ranking metrics only care about the top-k ordering.** HearMe pays `Σ` of listened fractions over exactly 50 slots per user ([`HearMe_Personalized_Music_Recommender.md`](../faio-2025/day2/HearMe_Personalized_Music_Recommender.md)), normalised to 0–1. Nothing outside those 50 is scored, ranks beyond 50 do not exist, and the statement's "replays don't count extra" caps each slot at 1. So a model's calibration over the whole catalogue is irrelevant; only the identity of each user's top 50 matters.
+**Ranking metrics only care about the top-k ordering.** HearMe pays the sum $\sum_j f_j$ of listened fractions over exactly 50 slots per user ([`HearMe_Personalized_Music_Recommender.md`](../faio-2025/day2/HearMe_Personalized_Music_Recommender.md)), normalised to 0–1. Nothing outside those 50 is scored, ranks beyond 50 do not exist, and the statement's "replays don't count extra" caps each slot at 1. So a model's calibration over the whole catalogue is irrelevant; only the identity of each user's top 50 matters.
 
 **One boundary.** Where the archive has an obvious typo, solve the intended problem and note the ambiguity. Task 6 prints:
 
-```
-Final Verdict = 0,  if Accuracy > 0.55
-                (Accuracy − 0.55) / (1 − 0.55),  otherwise
-```
+$$
+\text{Final Verdict} =
+\begin{cases}
+0, & \text{if Accuracy} > 0.55 \\
+\dfrac{\text{Accuracy} - 0.55}{1 - 0.55}, & \text{otherwise}
+\end{cases}
+$$
 
 Read literally, that zeroes every good solution and rewards bad ones — it is inverted. The intended rule is plainly 0 when accuracy is *below* 0.55. The correct response is to maximise accuracy as intended and, if the contest has a clarification channel, ask. Writing a deliberately bad solution to exploit the printed text is not strategy; it fails the moment the grader implements the intent.
 
@@ -49,13 +61,13 @@ Read literally, that zeroes every good solution and rewards bad ones — it is i
 Open [`task6_Simple_Objects.md`](../faio-2025/qualification/task6_Simple_Objects.md) and derive your whole plan from the Evaluation section alone.
 
 1. Metric is on the **count** → do not build a classifier. Connected components suffice, and the statement hands you the guarantee: "each figure is a single connected component when considering edge pixels."
-2. Error is **relative to `y`** → build a validation split weighted toward `y` near 100 using `train.csv`'s ground-truth counts.
+2. Error is **relative to $y$** → build a validation split weighted toward $y$ near 100 using `train.csv`'s ground-truth counts.
 3. Error is **absolute difference**, not squared → a few large misses cost the same as many small ones; chase bias, not variance.
 4. There is a **floor at 0.55** → first milestone is a submission provably above it on train, not a good one.
-5. `min(1, ·)` **caps the penalty at 1** → a catastrophic image cannot go below 0 accuracy, so a failed read should fall back to a plausible constant (say the training median) rather than crash the batch.
+5. $\min(1, \cdot)$ **caps the penalty at 1** → a catastrophic image cannot go below 0 accuracy, so a failed read should fall back to a plausible constant (say the training median) rather than crash the batch.
 6. **8000 images** → runtime is part of the score in practice, because a run you cannot finish produces no file at all.
 
-Now the same exercise on [`Lost_in_the_Museum.md`](../faio-2025/day2/Lost_in_the_Museum.md): "You must treat all images equally… You submit embeddings only", exactly 20,000 rows, `image_name` plus `feature_0 … feature_{D−1}`, D recommended 256 or 512, "no filtering, sorting, or skipping allowed". The metric never sees your model, so nothing about architecture is scored — only whether a query and its HQ painting come out near each other under cosine. That tells you to spend the round on *invariance to the domain gap* (blur, glare, crop) and nothing at all on a classifier head.
+Now the same exercise on [`Lost_in_the_Museum.md`](../faio-2025/day2/Lost_in_the_Museum.md): "You must treat all images equally… You submit embeddings only", exactly 20,000 rows, `image_name` plus `feature_0 … feature_{D-1}`, $D$ recommended 256 or 512, "no filtering, sorting, or skipping allowed". The metric never sees your model, so nothing about architecture is scored — only whether a query and its HQ painting come out near each other under cosine. That tells you to spend the round on *invariance to the domain gap* (blur, glare, crop) and nothing at all on a classifier head.
 
 ## [code-first]
 
@@ -101,17 +113,17 @@ def hit_at_3(Q, G, truth):                     # Q, G L2-normalised
 
 1. Task 6, true count 120, you predict 132. What is the per-image accuracy, and is the verdict above the floor?
 2. Same absolute error of 12 at a true count of 480. Accuracy?
-3. Why does a constant `+4` overcount hurt more than a zero-mean `±4` noise on task 6?
+3. Why does a constant $+4$ overcount hurt more than a zero-mean $\pm 4$ noise on task 6?
 4. Task 4 has `ru`, `kaz`, `eng`. Your model predicts `eng` perfectly, `ru` well, and never predicts `kaz`. What does accuracy say versus macro-F1?
-5. Task 6 prints `0, if Accuracy > 0.55`. What do you do?
+5. Task 6 prints $0$ if $\text{Accuracy} > 0.55$. What do you do?
 6. Under Hit@3, which queries deserve your remaining hour?
 7. Name one piece of information the HearMe metric completely ignores.
 
 <details><summary>Answers</summary>
 
-1. Error rate `12/120 = 0.10`, accuracy `0.90`; verdict `(0.90−0.55)/0.45 = 0.778`. Above the floor.
-2. `12/480 = 0.025`, accuracy `0.975` — a quarter of the loss for the identical absolute error. Hence test on small `y`.
-3. Because it shifts every image's error in the same direction, so nothing cancels; with relative error the shift is most damaging precisely on the low-`y` images. Zero-mean noise leaves many images nearly exact.
+1. Error rate $12/120 = 0.10$, accuracy $0.90$; verdict $(0.90 - 0.55)/0.45 = 0.778$. Above the floor.
+2. $12/480 = 0.025$, accuracy $0.975$ — a quarter of the loss for the identical absolute error. Hence test on small $y$.
+3. Because it shifts every image's error in the same direction, so nothing cancels; with relative error the shift is most damaging precisely on the low-$y$ images. Zero-mean noise leaves many images nearly exact.
 4. Accuracy stays high if `kaz` is a small fraction of the rows; macro-F1 loses the entire `kaz` term, capping you near 0.67. The grid search in the reference notebook tunes on `f1_macro` for exactly this reason.
 5. Treat it as the typo it is: maximise accuracy as intended (0 *below* 0.55), and flag the ambiguity to the organisers if a clarification channel exists. Do not engineer a bad solution to exploit the literal wording.
 6. The ones whose true match currently sits just outside the top 3 — ranks 4 to roughly 10. Moving a rank-2 hit to rank 1 adds exactly zero.
