@@ -31,11 +31,17 @@ A one-pixel-wide diagonal line is **8-connected but not 4-connected**. Under 4-c
 - `RETR_LIST` — every boundary, flat, no hierarchy. One ring → **2** contours.
 - `RETR_TREE` — every boundary plus the full nesting hierarchy, so you can filter by depth yourself.
 
-So `RETR_LIST` on an image of hollow figures returns roughly **double** the truth. With task 6's `Error Rate = |ŷ − y| / y`, ŷ = 2y gives Error Rate 1.0, Accuracy 0.0 — below the 0.55 floor, verdict 0. One wrong enum, whole task lost. This is the single biggest scoring mistake available in the problem.
+So `RETR_LIST` on an image of hollow figures returns roughly **double** the truth. Task 6's error rate is
+
+$$
+\text{Error Rate} = \frac{\lvert \hat{y} - y \rvert}{y}
+$$
+
+so $\hat{y} = 2y$ gives Error Rate 1.0, Accuracy 0.0 — below the 0.55 floor, verdict 0. One wrong enum, whole task lost. This is the single biggest scoring mistake available in the problem.
 
 **`method`.** `CHAIN_APPROX_NONE` stores every boundary pixel; `CHAIN_APPROX_SIMPLE` keeps only the endpoints of straight runs. For counting they are identical, and `SIMPLE` is smaller and faster — use it by default. (`approxPolyDP` in T29 is a different, lossy simplification; do not confuse the two.)
 
-**Two cleanup tools.** *Area filter:* `cv2.contourArea(c)` is the enclosed pixel area; anti-aliasing and JPEG ringing leave 1-3 pixel speckles that are genuine components, so drop `area < ~20` — but keep the floor **low**, because real small figures exist and each one dropped costs count. *Morphological close:* `cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)` is dilate-then-erode, bridging 1-2 pixel gaps where thresholding broke a thin stroke and split one figure into three components. A 3×3 kernel repairs hairline breaks; a 9×9 kernel fuses genuinely separate neighbours and *undercounts*. Small kernel, always.
+**Two cleanup tools.** *Area filter:* `cv2.contourArea(c)` is the enclosed pixel area; anti-aliasing and JPEG ringing leave 1-3 pixel speckles that are genuine components, so drop `area < ~20` — but keep the floor **low**, because real small figures exist and each one dropped costs count. *Morphological close:* `cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)` is dilate-then-erode, bridging 1-2 pixel gaps where thresholding broke a thin stroke and split one figure into three components. A $3 \times 3$ kernel repairs hairline breaks; a $9 \times 9$ kernel fuses genuinely separate neighbours and *undercounts*. Small kernel, always.
 
 **The alternative API.** `cv2.connectedComponentsWithStats(mask, connectivity=8)` returns `(n_labels, labels, stats, centroids)`. `n_labels - 1` is the component count (label 0 is background), and `stats[:, cv2.CC_STAT_AREA]` gives areas for filtering in one vectorised pass. It has **no hierarchy**, so a hollow ring is one component and its hole is simply not a component — it behaves like `RETR_EXTERNAL` for free. Use it when you only need counts; use contours when you also need shape.
 

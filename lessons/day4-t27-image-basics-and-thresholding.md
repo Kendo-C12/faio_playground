@@ -77,7 +77,7 @@ gray_fast = cv2.imread("blueprint.png", cv2.IMREAD_GRAYSCALE)
 
 ## [drill]
 
-1. `cv2.imread` on a 2048×2048 PNG — give shape, dtype and channel order.
+1. `cv2.imread` on a $2048 \times 2048$ PNG — give shape, dtype and channel order.
 2. Why is `gray.astype(int)` needed before `np.abs(gray - bg)`?
 3. When does Otsu fail on a task 6 blueprint, and what replaces it?
 4. Your mask has a stroke pixel fraction of 0.97. What happened?
@@ -104,5 +104,5 @@ gray_fast = cv2.imread("blueprint.png", cv2.IMREAD_GRAYSCALE)
 - The background is the histogram **mode**, derived per image — never assumed white.
 - Otsu needs a bimodal histogram; a blueprint with pale and dark strokes is not bimodal.
 - Adaptive thresholding is for uneven illumination; synthetic images do not need it.
-- Read with `IMREAD_GRAYSCALE` when you never need colour — 8000 × 2048² adds up.
+- Read with `IMREAD_GRAYSCALE` when you never need colour — $8000 \times 2048^2$ adds up.
 - Tune the tolerance against `train.csv` counts, because that file is the only ground truth you get.
