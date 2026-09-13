@@ -15,17 +15,23 @@ Day 4 is vision, embeddings and signals. It starts here because every later step
 
 **dtype discipline.** `uint8` wraps around: `np.uint8(250) + np.uint8(10)` is `4`, not `260`. Any arithmetic that can leave `0..255` must go through `.astype(int)` or `.astype(np.float32)` first. This is the single most common silent bug in hand-written CV code.
 
-**Grayscale.** `cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)` collapses 3 channels to 1 with a luminance-weighted sum (≈ `0.299R + 0.587G + 0.114B`). It is not the mean. Consequence: a saturated green and a saturated blue of the same "brightness" to the eye map to very different gray values — and a coloured stroke can accidentally land on the background's gray value.
+**Grayscale.** `cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)` collapses 3 channels to 1 with a luminance-weighted sum:
+
+$$
+Y \approx 0.299 R + 0.587 G + 0.114 B
+$$
+
+It is not the mean. Consequence: a saturated green and a saturated blue of the same "brightness" to the eye map to very different gray values — and a coloured stroke can accidentally land on the background's gray value.
 
 **Histogram.** `np.bincount(gray.ravel(), minlength=256)` gives how many pixels sit at each of the 256 levels. On a blueprint it is extremely lopsided: one enormous spike at the background, thin bumps at the stroke colours. That spike is information, not noise.
 
 **Thresholding** turns gray into a binary mask.
 
 - *Global:* one cut value for the whole image — `cv2.threshold(gray, T, 255, cv2.THRESH_BINARY)`.
-- *Otsu:* picks `T` automatically by maximising between-class variance — `cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)`. Assumes a roughly **bimodal** histogram.
-- *Adaptive:* a different `T` per neighbourhood — `cv2.adaptiveThreshold(...)`. For uneven lighting (a photo), not for a synthetic blueprint.
+- *Otsu:* picks $T$ automatically by maximising the between-class variance $\sigma_b^2(T)$ — `cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)`. Assumes a roughly **bimodal** histogram.
+- *Adaptive:* a different $T$ per neighbourhood — `cv2.adaptiveThreshold(...)`. For uneven lighting (a photo), not for a synthetic blueprint.
 
-Worked example: a blueprint with background 240, a pale gray stroke at 215 and a dark stroke at 30. Otsu sees the mass at 240 versus the mass near 30 and puts `T` around 130 — which swallows the 215 stroke into "background" and loses every pale figure. Task 6's relative-error metric then punishes you hardest on the low-`N` images.
+Worked example: a blueprint with background 240, a pale gray stroke at 215 and a dark stroke at 30. Otsu sees the mass at 240 versus the mass near 30 and puts $T$ around 130 — which swallows the 215 stroke into "background" and loses every pale figure. Task 6's relative-error metric then punishes you hardest on the low-$N$ images.
 
 ## [problem-first]
 
@@ -34,7 +40,7 @@ Open [`task6_Simple_Objects.md`](../faio-2025/qualification/task6_Simple_Objects
 Derive what the statement does and does not give you:
 
 1. It promises the background is *distinguishable*. It never says the background is white, nor that there are only two brightness levels. So a hard-coded `gray < 128` and a blind Otsu are both unjustified guesses.
-2. 100 ≤ N ≤ 500 strokes on 2048×2048 means the background is overwhelmingly the **most frequent** pixel value in every image. That is a far stronger, and checkable, assumption than bimodality.
+2. $100 \le N \le 500$ strokes on $2048 \times 2048$ means the background is overwhelmingly the **most frequent** pixel value in every image. That is a far stronger, and checkable, assumption than bimodality.
 3. So derive it per image: `bg = np.bincount(gray.ravel()).argmax()`, then call a pixel "stroke" when it differs from `bg` by more than a tolerance. This is exactly the move in [`solutions/qualification/task6-simple-objects.md`](../solutions/qualification/task6-simple-objects.md).
 4. Tolerance is your one tuning knob. Too small and anti-aliased stroke edges fragment; too large and pale strokes vanish. `train.csv` ships ground-truth counts — tune it there, not by eye.
 5. "Transparent interiors" means a hollow ring of stroke pixels. Keep that in mind; T28 is about what that does to the count.

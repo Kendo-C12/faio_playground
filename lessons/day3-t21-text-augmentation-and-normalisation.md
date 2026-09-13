@@ -40,7 +40,7 @@ eng:  untouched
 
 Every split is `sample(frac=0.5, random_state=42)` with the complement taken by `drop(index)`, then the pieces are `pd.concat`-ed back into the training set. Read the code carefully: the transformed rows **replace** the originals inside their own half, so the final set is the same size, with `kaz` ending up 25% de-diacriticised, 25% de-diacriticised-and-Latinised, 50% original.
 
-Why each piece earns its place. `kazakh_to_russian` on `kaz` forces the model to find Kazakh in the *word shapes and endings* (`-дар`, `-мен`, `-ға`) rather than in one diacritic — this is the piece that matters most. Transliterating both `kaz` and `ru` teaches the model that Latin script ≠ `eng`; without it, every Latin-script message gets labelled `eng`. And `eng` is left alone because no shift is expected for it — you do not augment a class whose test distribution already matches training.
+Why each piece earns its place. `kazakh_to_russian` on `kaz` forces the model to find Kazakh in the *word shapes and endings* (`-дар`, `-мен`, `-ға`) rather than in one diacritic — this is the piece that matters most. Transliterating both `kaz` and `ru` teaches the model that $\text{Latin script} \ne \texttt{eng}$; without it, every Latin-script message gets labelled `eng`. And `eng` is left alone because no shift is expected for it — you do not augment a class whose test distribution already matches training.
 
 The closing markdown cell confirms the target: the test set contains **code-switched** texts, English grammar carrying Kazakh or Russian words and vice versa. The augmentation is a cheap synthetic approximation of that; manually labelling the real code-switched test rows and adding them to training improves macro-F1 further.
 

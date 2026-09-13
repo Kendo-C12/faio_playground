@@ -12,9 +12,27 @@ Text is not a feature. TF-IDF is the cheapest way to turn it into one, and on th
 
 **Bag of words.** Fix a vocabulary of V terms. Each document becomes a row of V counts: how often each term appears, word order thrown away. Stack the rows and you have the **document-term matrix**, shape `(n_docs, V)`, almost all zeros — scikit-learn keeps it sparse, so 20,000 columns costs nothing.
 
-**Term frequency (TF).** Count of term *t* in document *d*. Raw counts over-reward long documents and repeated words, so two fixes exist. Dividing by document length gives a relative frequency; `sublinear_tf=True` instead replaces the count with `1 + log(tf)`. That log is damping: the 10th occurrence of a word adds far less than the 2nd. The shipped notebook sets `sublinear_tf=True` for exactly this reason — support messages are short and repetitive.
+**Term frequency (TF).** Count of term *t* in document *d*. Raw counts over-reward long documents and repeated words, so two fixes exist. Dividing by document length gives a relative frequency; `sublinear_tf=True` instead replaces the count with the log-damped form:
 
-**Inverse document frequency (IDF).** A term in every document separates nothing, so IDF down-weights it — sklearn's smoothed form is `idf(t) = log((1+n)/(1+df(t))) + 1`, and the cell value is `tf(t,d) · idf(t)`. Here `df(t)` is the number of documents containing *t*: rare term → high IDF → high weight. Rows are then L2-normalised by default, so document length stops mattering.
+$$
+\text{tf}_{\text{sublinear}}(t,d) = 1 + \log\big(\text{tf}(t,d)\big)
+$$
+
+That log is damping: the 10th occurrence of a word adds far less than the 2nd. The shipped notebook sets `sublinear_tf=True` for exactly this reason — support messages are short and repetitive.
+
+**Inverse document frequency (IDF).** A term in every document separates nothing, so IDF down-weights it — sklearn's smoothed form is
+
+$$
+\text{idf}(t) = \log\!\left(\frac{1+n}{1+\text{df}(t)}\right) + 1
+$$
+
+and the cell value is the tf-idf product:
+
+$$
+\text{tfidf}(t,d) = \text{tf}(t,d) \cdot \text{idf}(t)
+$$
+
+Here $\text{df}(t)$ is the number of documents containing *t*: rare term → high IDF → high weight. Rows are then L2-normalised by default, so document length stops mattering.
 
 **Vocabulary controls.** `max_features=20_000` keeps only the 20k most frequent terms — a hard memory and overfitting cap. `min_df=2` drops terms seen in one document only (typos, noise). `max_df=0.9` drops terms present in over 90% of documents.
 
@@ -36,7 +54,7 @@ What the statement forces:
 1. "short conversational texts" → few tokens per row, so word features are sparse per document and char features are dense per document. Points at `char_wb`.
 2. Three labels, no stated balance → check `train.label.value_counts()` before trusting an averaged score.
 3. Two Cyrillic languages plus one Latin → **script itself** is a feature, and char 1-grams encode it for free.
-4. `id` must run `0..n−1` in `test.csv` order, so never shuffle or filter the test frame.
+4. `id` must run $0 \dots n-1$ in `test.csv` order, so never shuffle or filter the test frame.
 
 And here is the contradiction worth knowing: the shipped notebook [`task4_solution_Who_Speaks_What.ipynb`](../faio-2025/qualification/task4_solution_Who_Speaks_What.ipynb) uses `TfidfVectorizer(sublinear_tf=True, max_features=20_000)` — **no `analyzer` argument, so word-level** — and scores well. It wins on word features because it first augments the data hard (see T21), which manufactures the word forms the model would otherwise miss. Char n-grams and augmentation are two routes to the same robustness.
 
@@ -90,8 +108,8 @@ pd.DataFrame({"id": range(len(pred)), "label": pred}).to_csv("solution.csv", ind
 
 <details><summary>Answers</summary>
 
-1. `1 + log(8)` ≈ 3.08 — the log damps repetition so a word said eight times is not eight times the evidence.
-2. `log((1+n)/(1+n)) + 1 = 1`, the floor. It is not removed, only given the minimum weight; use `max_df` to actually drop it.
+1. $1 + \log(8) \approx 3.08$ — the log damps repetition so a word said eight times is not eight times the evidence.
+2. $\log\!\left(\frac{1+n}{1+n}\right) + 1 = 1$, the floor. It is not removed, only given the minimum weight; use `max_df` to actually drop it.
 3. Fewer columns than examples means fewer free parameters for the linear model, so less capacity to memorise rare training-only terms.
 4. `char_wb` pads each word and never builds n-grams spanning a space, so features stay within-word evidence instead of accidental cross-word junk.
 5. Word level — no `analyzer` argument is passed, so the default applies. It works because the augmentation step first generates transliterated and de-diacriticised variants, putting the hard word forms into training directly.

@@ -10,7 +10,7 @@ A pretrained transformer is a file of weights that already understands language.
 
 ## [concept-first]
 
-**Tokenisation.** A transformer cannot read characters. A tokeniser splits text into sub-word pieces from a fixed vocabulary and maps each to an integer. `"Сәлеметсіз"` might become `["▁Сәле", "мет", "сіз"]` → `[14221, 903, 1177]`. Two consequences: an unknown word never becomes `<UNK>`, it decomposes; and **token count ≠ word count**, so a 512-token limit is not 512 words. For Kazakh, a multilingual tokeniser splits far more aggressively than for English — check `len(tok(text).input_ids)` before assuming anything fits.
+**Tokenisation.** A transformer cannot read characters. A tokeniser splits text into sub-word pieces from a fixed vocabulary and maps each to an integer. `"Сәлеметсіз"` might become `["▁Сәле", "мет", "сіз"]` → `[14221, 903, 1177]`. Two consequences: an unknown word never becomes `<UNK>`, it decomposes; and **token count $\ne$ word count**, so a 512-token limit is not 512 words. For Kazakh, a multilingual tokeniser splits far more aggressively than for English — check `len(tok(text).input_ids)` before assuming anything fits.
 
 **What a pretrained encoder gives you.** Feed token ids into a model like XLM-RoBERTa and you get, per token, a vector that encodes that token *in its context*. Pool those (mean, or the `[CLS]` position) into one vector per document and you have a dense 768-dimensional embedding where semantically similar sentences are close. That is the product: a feature extractor you did not have to train.
 
@@ -88,7 +88,7 @@ To fine-tune instead, swap `AutoModel` for `AutoModelForSequenceClassification(n
 1. Sub-word tokenisers split rare words into several pieces, and split non-English text more aggressively, so 512 tokens can be only 150–250 Kazakh words. Anything past the limit is silently truncated.
 2. Frozen: no training, embeddings cached once and reused, nothing to tune — it cannot fail expensively. Fine-tuning: a few points more accuracy, because the encoder adapts to your labels.
 3. `xlm-roberta-base` — trained on 100 languages with one shared vocabulary. `bert-base-uncased` is English; Kaz-RoBERTa is Kazakh-focused.
-4. About 14 GB in fp16 (2 bytes × 7e9), roughly 3.5–4 GB in 4-bit — the difference between not fitting and fitting on a 16 GB card.
+4. About 14 GB in fp16 ($2 \text{ bytes} \times 7 \times 10^{9}$), roughly 3.5–4 GB in 4-bit — the difference between not fitting and fitting on a 16 GB card.
 5. No. `bm25s` with `Stemmer` retrieves candidates and a `SentenceTransformer` reranks them; the model only picks from a short list. Cheap retrieval narrows the field so the expensive model runs on few inputs.
 6. Learning rate too high (the head collapses to the majority class), or a label-encoding mismatch between `num_labels` and the actual label ids.
 
@@ -98,7 +98,7 @@ To fine-tune instead, swap `AutoModel` for `AutoModelForSequenceClassification(n
 
 ## Traps & 60-second recall
 
-- Do the VRAM arithmetic first: params × bytes-per-param. 16 GB is the IOAI 2026 budget.
+- Do the VRAM arithmetic first: $\text{params} \times \text{bytes-per-param}$. 16 GB is the IOAI 2026 budget.
 - Assume no internet. Load from local paths, and pre-download weights while you still can.
 - `torch.no_grad()` and `.eval()` for inference, every time.
 - Mean-pool with the attention mask, not a plain `.mean(1)` — padding otherwise dilutes every vector.

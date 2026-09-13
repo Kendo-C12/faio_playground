@@ -10,12 +10,7 @@ Rating 3 · **exam-probability rank 1** · ~10 min
 - Classical probability: $P(A) = \dfrac{m}{n}$ — $m$ favourable equally likely outcomes, $n$ total.
 - Bounds: $0 \le P(A) \le 1$, $P(\Omega) = 1$, $P(\varnothing) = 0$.
 - Complement: $P(\bar{A}) = 1 - P(A)$.
-- Addition rule:
-
-$$
-P(A \cup B) = P(A) + P(B) - P(A \cap B), \qquad \text{mutually exclusive} \Rightarrow P(A \cap B) = 0
-$$
-
+- Addition rule: $P(A \cup B) = P(A) + P(B) - P(A \cap B)$; mutually exclusive $\Rightarrow P(A \cap B) = 0$.
 - Independence / multiplication: $P(A \cap B) = P(A) \cdot P(B)$ if independent, else $P(A) \cdot P(B \mid A)$.
 - $n$ independent repeats of an event of probability $p$: all occur $= p^{n}$; none occurs $= (1-p)^{n}$.
 - **At least one** pattern:

@@ -13,17 +13,25 @@ Rating 0 · **exam-probability rank 1** · ~45 min
 
 So: aggregate first, classify second. One row per `id`.
 
-**Sampling-rate arithmetic.** `fs` Hz means `fs` rows per second, so `n_rows = duration × fs` and `duration = n_rows / fs`. At task 5's **200 Hz**: one second is 200 rows, a 2-second repetition is ~400 rows, consecutive rows are 5 ms apart. Do this on the real data before believing the text — `n_rows / 200` must land in a plausible range for a yoga repetition (roughly 1–10 s).
+**Sampling-rate arithmetic.** $f_s$ Hz means $f_s$ rows per second, so
+
+$$
+n_{\text{rows}} = \text{duration} \times f_s
+\qquad
+\text{duration} = \frac{n_{\text{rows}}}{f_s}
+$$
+
+At task 5's **200 Hz**: one second is 200 rows, a 2-second repetition is ~400 rows, consecutive rows are 5 ms apart. Do this on the real data before believing the text — $n_{\text{rows}} / 200$ must land in a plausible range for a yoga repetition (roughly 1–10 s).
 
 **The standard feature battery,** per window per axis:
 
 | Feature | Formula | What it captures |
 |---|---|---|
-| mean | `x̄` | resting level / orientation |
-| std, range, RMS | `sqrt(Σ(xᵢ−x̄)²/n)`, `max−min`, `sqrt(Σxᵢ²/n)` | how much it moved, total activity |
-| zero-crossing rate | fraction of `i` with `sign(xᵢ) ≠ sign(xᵢ₊₁)` | oscillation rate — a cheap frequency proxy |
-| cross-axis correlation | `corr(ax, ay)` etc. | coordinated vs sloppy movement |
-| magnitude | `sqrt(ax²+ay²+az²)`, then its stats | orientation-invariant activity |
+| mean | $\bar{x}$ | resting level / orientation |
+| std, range, RMS | $\sqrt{\sum_i (x_i - \bar{x})^2 / n}$, $\max - \min$, $\sqrt{\sum_i x_i^2 / n}$ | how much it moved, total activity |
+| zero-crossing rate | fraction of $i$ with $\operatorname{sign}(x_i) \ne \operatorname{sign}(x_{i+1})$ | oscillation rate — a cheap frequency proxy |
+| cross-axis correlation | $\operatorname{corr}(a_x, a_y)$ etc. | coordinated vs sloppy movement |
+| magnitude | $\sqrt{a_x^2 + a_y^2 + a_z^2}$, then its stats | orientation-invariant activity |
 | n_rows | count | duration |
 
 `mean` tells you the pose; `std`, `range` and `RMS` tell you how it was performed; the zero-crossing rate stands in for the spectral features of T26; cross-axis correlation is the only entry that can see coordination. Run the battery on the magnitude channels too — they are invariant to how the sensor was mounted.
@@ -100,8 +108,8 @@ y = pd.read_csv("y_train.csv").set_index("id").loc[F.index, "label"]
 
 <details><summary>Answers</summary>
 
-1. 500 rows; 1/200 s = 5 ms.
-2. 80,000 / 200 = 400 rows per id, and 400 / 200 Hz = 2.0 seconds.
+1. 500 rows; $1/200$ s = 5 ms.
+2. $80{,}000 / 200 = 400$ rows per id, and $400 / 200 = 2.0$ seconds.
 3. Shape mismatch with the per-repetition label; no temporal structure visible to a row-wise model; no defined way to vote 400 predictions back into one.
 4. Cross-axis correlation. Two axes moving in lockstep and two moving independently can have identical per-axis `std`, `min` and `max` — only the joint term separates them.
 5. Leakage across the grouped unit: rows of one repetition sit on both sides, so the model recognises the repetition rather than the form. Aggregate to one row per `id` first, or use `GroupKFold(groups=df["id"])`.
@@ -113,7 +121,7 @@ y = pd.read_csv("y_train.csv").set_index("id").loc[F.index, "label"]
 
 ## Traps & 60-second recall
 
-- 200 Hz means 200 rows per second; duration is `n_rows / 200`.
+- 200 Hz means 200 rows per second; duration is $n_{\text{rows}} / 200$.
 - Aggregate to one row per `id` *before* modelling — it fixes the shape and removes the leakage risk at once.
 - Never random-split raw timesteps; `GroupKFold` with `groups=id`, or aggregate first.
 - Flatten MultiIndex columns the line after `agg`.
