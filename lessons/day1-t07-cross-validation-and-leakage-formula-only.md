@@ -1,35 +1,117 @@
-# T07 · Cross-validation & leakage — formula sheet (Day 1)
+# T07 · Cross-validation and leakage — Day 1
 
 **Anchor task(s):**
 - [`faio-2025/qualification/task5_Can_You_Become_AI_Yoga_Instructor.md`](../faio-2025/qualification/task5_Can_You_Become_AI_Yoga_Instructor.md)
 - [`faio-2025/qualification/task4_Who_Speaks_What.md`](../faio-2025/qualification/task4_Who_Speaks_What.md)
 
-Rating 3 · **exam-probability rank 1** · ~10 min
+Rating 1 · **exam-probability rank 1** · ~50 min
 
-## Formulas
+Validation is the only instrument you have during the round. The leaderboard shows you one number, late, on data you cannot inspect. If your local estimate is wrong, every decision you make after it is wrong too.
 
-- Holdout: train on `⌊(1−t)·n⌋` rows, score on the remaining `⌈t·n⌉`; typical `t = 0.2`.
-- k-fold: `k` disjoint folds of size `n/k`; each fold is validated once, trained on `k−1` folds → `k` fits, each on `n·(k−1)/k` rows.
-- CV score: `CV = (1/k) Σ_{i=1..k} m(fold i)`; report the **standard error** `sd(mᵢ)/√k` beside it.
-- Stratified k-fold: each fold keeps class proportions `p_c = n_c/n` — the default for classification, and what task 4 (`ru`/`kaz`/`eng`) and task 5 (`0`/`1`) both need.
-- Group k-fold: folds split on a grouping key, so all rows sharing that key land in one fold. For task 5 the key is `id` — one yoga repetition at 200 Hz is many rows, and rows of one repetition must never straddle a fold.
-- Leave-one-out: `k = n`; unbiased but `n` fits, unusable at scale.
-- Repeated stratified k-fold: `r` shuffles × `k` folds = `r·k` fits; variance of the estimate drops ≈ `1/√r`.
-- Total fits in a search: `|grid| × k` (see T19) — the only cost formula that matters under a 4-hour clock.
-- Leakage checklist: (1) `fit` scalers, vectorisers, imputers, encoders on **train folds only**, `transform` the rest; (2) never compute a statistic (mean, TF-IDF vocabulary, target encoding, PCA basis) over train **and** test together; (3) group by example id; (4) split time series chronologically, never at random; (5) drop any id-derived or row-order feature; (6) deduplicate before splitting, or a duplicated row sits in both sides.
+## [concept-first]
 
-## Values worth memorising
+**Holdout.** Split once: train on a fraction, score on the rest. With $n$ rows and a test fraction $t$, you train on $\lfloor (1-t)\,n \rfloor$ rows. Cheap, and noisy — one unlucky split moves the number more than most model changes do.
 
-- `cross_val_score(..., cv=5)` — `cv=5` is the scikit-learn default for a plain integer and the usual round-time compromise; `cv=3` is what the grid search in [`task4_solution_Who_Speaks_What.ipynb`](../faio-2025/qualification/task4_solution_Who_Speaks_What.ipynb) uses.
-- Train/val tradeoff: larger `k` → more training data per fit (less pessimistic bias) but higher variance and `k`× the time. `k = 5` trains on 80 %, `k = 10` on 90 % at double the cost.
-- An integer `cv` with a classifier silently means **StratifiedKFold**; with a regressor it means plain **KFold**.
-- `StratifiedKFold` and `KFold` do **not** shuffle by default — pass `shuffle=True, random_state=42`.
-- Rule of thumb for a gap: CV minus leaderboard above ~0.05 absolute is leakage or a distribution shift, not noise.
+**k-fold.** Cut the data into $k$ disjoint folds. Each fold is validated once against a model trained on the other $k-1$, so every row is predicted exactly once and you pay $k$ fits. The estimate is the fold mean:
 
-## One-line traps
+$$
+\text{CV} = \frac{1}{k}\sum_{i=1}^{k} m_i
+$$
 
-- Fitting `TfidfVectorizer` or `StandardScaler` on `train + test` before splitting — the single commonest leak; use a `Pipeline` so CV cannot do it.
-- Random `KFold` on task 5's raw per-timestep rows: near-duplicate neighbouring samples put the same repetition on both sides and the CV score becomes meaningless. Aggregate per `id` first, or use `GroupKFold(groups=id)`.
-- Forgetting `shuffle=True` on data stored sorted by label → folds with one class only.
-- Tuning on the same split you report: the reported number is then optimistic. Tune inside CV, report on a held-out split.
-- `scoring` left at default (accuracy) when the task's metric differs — the fold ranking you trust is then the wrong one.
+Always read it with its spread. The standard error of that mean is
+
+$$
+\text{SE} = \frac{\mathrm{sd}(m_i)}{\sqrt{k}}
+$$
+
+and a change smaller than roughly $2\,\text{SE}$ is not a real improvement. This single habit stops you from chasing noise for an hour.
+
+**Stratified k-fold.** Each fold preserves the class proportions $p_c = n_c / n$. The default for classification, and what both ML tasks in the 2025 qualification need — [`task4`](../faio-2025/qualification/task4_Who_Speaks_What.md) has three languages, [`task5`](../faio-2025/qualification/task5_Can_You_Become_AI_Yoga_Instructor.md) has two classes.
+
+**Group k-fold.** Folds split on a grouping key so every row sharing that key lands in the same fold. This is the one that decides whether your task 5 score means anything, and the reason this lesson exists.
+
+**Leave-one-out** is $k = n$: nearly unbiased, $n$ fits, unusable under a 4-hour clock. **Repeated stratified k-fold** runs $r$ shuffles of $k$ folds for $r \cdot k$ fits, and the spread of the estimate shrinks roughly as $1/\sqrt{r}$.
+
+**Leakage** is any path by which information from the validation rows reaches the model before it is scored. It always shows up the same way: local score excellent, leaderboard mediocre. The gap is the diagnosis.
+
+## [problem-first]
+
+Open [`task5_Can_You_Become_AI_Yoga_Instructor.md`](../faio-2025/qualification/task5_Can_You_Become_AI_Yoga_Instructor.md). Signals `ax ay az wx wy wz` at **200 Hz**, one `id` per yoga repetition, binary label, metric accuracy.
+
+Work out what that sampling rate does to validation. A two-second repetition is about 400 rows. Consecutive rows inside one repetition are nearly identical — 5 ms apart, same person, same motion. So if you shuffle rows at random into folds:
+
+1. Roughly 80 % of every repetition lands in the training folds.
+2. The validation rows are near-duplicates of rows the model just memorised.
+3. Accuracy comes back at 0.99, and it is measuring nothing.
+
+The label is per repetition, so the *example* is the repetition, not the row. That makes `id` the grouping key, and `GroupKFold` or `StratifiedGroupKFold` the only honest splitter here.
+
+Now [`task4_Who_Speaks_What.md`](../faio-2025/qualification/task4_Who_Speaks_What.md), which leaks in a different place. The features come from a `TfidfVectorizer`, and the vocabulary and the IDF weights are *learned from data*. Fit that on train plus test and every fold has already seen the validation distribution. The fix is structural, not careful — put the vectoriser in a `Pipeline` so cross-validation refits it inside each fold and cannot cheat.
+
+## [code-first]
+
+```python
+import numpy as np
+from sklearn.model_selection import StratifiedGroupKFold, cross_val_score, GridSearchCV
+from sklearn.pipeline import make_pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import HistGradientBoostingClassifier
+
+# --- task 5: the example is the repetition, so group on id -------------------
+# X_feat: one row per id (already aggregated). groups: the id of each row.
+cv = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+scores = cross_val_score(
+    HistGradientBoostingClassifier(), X_feat, y, groups=groups,
+    cv=cv, scoring="accuracy", n_jobs=-1,
+)
+# Report the mean WITH its standard error, or you cannot tell noise from gain.
+print(f"{scores.mean():.4f} ± {scores.std(ddof=1) / np.sqrt(len(scores)):.4f}")
+
+# --- task 4: the vectoriser must be refit inside every fold ------------------
+# A Pipeline makes leakage structurally impossible: cross_val_score calls
+# fit() on the training folds only, vectoriser included.
+pipe = make_pipeline(
+    TfidfVectorizer(sublinear_tf=True, max_features=20_000),
+    LogisticRegression(C=10, solver="saga", max_iter=200, random_state=42),
+)
+# scoring must match the competition metric, not the default accuracy.
+print(cross_val_score(pipe, texts, labels, cv=5, scoring="f1_macro").mean())
+
+# WRONG, and the commonest mistake in the room:
+#   X_all = TfidfVectorizer().fit_transform(pd.concat([train.text, test.text]))
+# The IDF weights now encode the test set. Local score rises, leaderboard does not.
+```
+
+## [drill]
+
+1. Task 5 raw rows, random `KFold`, accuracy 0.99, leaderboard 0.63. Name the cause and the fix.
+2. Write the standard error of a 5-fold CV whose fold scores are 0.80, 0.84, 0.78, 0.86, 0.82. Is a rival model at 0.83 better?
+3. Why does `Pipeline` prevent vectoriser leakage when a manual `fit_transform` does not?
+4. Data sorted by label, `KFold(n_splits=5)` with default arguments. What happens?
+5. An integer `cv=5` is passed with a classifier. Which splitter does scikit-learn actually use, and does it shuffle?
+6. You aggregate task 5 to one row per `id`. Do you still need `GroupKFold`?
+
+<details><summary>Answers</summary>
+
+1. Rows of one repetition are in both train and validation folds, so the model is scored on near-duplicates of its training data. Aggregate per `id` first, and split with `StratifiedGroupKFold(groups=id)`.
+2. Mean $0.82$, $\mathrm{sd} = 0.0316$ (ddof=1), so $\text{SE} = 0.0316/\sqrt{5} = 0.0141$. A rival at $0.83$ is inside $1\,\text{SE}$ — not a real difference; keep the simpler model.
+3. `cross_val_score` calls `fit` on the pipeline, so the vectoriser is refit on each training fold and only `transform`s the validation fold. A manual `fit_transform` over the whole frame happens once, before any split exists.
+4. Every fold contains one class, or close to it. Training sees classes the validation fold does not, and the scores are garbage. Pass `shuffle=True, random_state=42`, and prefer stratification.
+5. `StratifiedKFold` for a classifier (plain `KFold` for a regressor), and **no**, it does not shuffle by default.
+6. No — once each `id` is one row, plain `StratifiedKFold` is correct. Grouping matters only while multiple rows share an example.
+
+</details>
+
+**Rep:** score the same task 5 features twice — once with random `KFold` on raw per-timestep rows, once with `StratifiedGroupKFold` on the aggregated table — and write down both numbers. The gap between them is the size of the lie you would otherwise have believed.
+
+## Traps & 60-second recall
+
+- Fit every learned transform — scaler, vectoriser, imputer, encoder, PCA basis, target encoding — on **training folds only**. Use a `Pipeline` and the problem disappears.
+- Group on the example key whenever one example spans many rows. Task 5 is exactly this.
+- `shuffle=True, random_state=42` on `KFold`/`StratifiedKFold`; neither shuffles by default.
+- Set `scoring` to the competition metric. Task 4's shipped notebook tunes `f1_macro`, not accuracy.
+- Report mean ± standard error. Ignore any gain under about $2\,\text{SE}$.
+- Split time series chronologically, never at random. Deduplicate before splitting.
+- Never tune and report on the same split. A local score far above the leaderboard is leakage until proven otherwise.
+- Total fits in a search is $\lvert \text{grid} \rvert \times k$ — the cost formula that decides what you can afford (see T19).
