@@ -46,7 +46,7 @@ Two properties follow. It is **binary per query** — rank 1 and rank 3 score id
 
 **Graded, summed metrics.** [`HearMe_Personalized_Music_Recommender.md`](../faio-2025/day2/HearMe_Personalized_Music_Recommender.md) gives each of 50 ranked tracks per user a listened fraction from $\{0,\ 0.25,\ 0.5,\ 0.75,\ 1.0\}$, sums them per user (0–50), averages over users, then normalises to 0–1. So: partial credit exists, a quarter-listen is a real quarter-point, replays do not double-count, and **rank position is not weighted at all** inside the 50 — rank 1 and rank 50 are worth the same. That makes it a *set* selection problem, not an ordering problem, and it rewards predicting listening *depth* rather than mere clicks.
 
-**Macro-F1**, task 4's real metric, is covered as formulas in [`day3-t05-classification-metrics-formula-only.md`](./day3-t05-classification-metrics-formula-only.md). The point here is only that it was never stated in [`task4_Who_Speaks_What.md`](../faio-2025/qualification/task4_Who_Speaks_What.md) — it had to be inferred from the solution notebook's `classification_report` and its `scoring="f1_macro"` grid search. When the statement is silent, look at whatever reference code ships with it.
+**Macro-F1**, task 4's real metric, is covered as formulas in [`day03_t05_math_classification_metrics_formula_only.md`](./day03_t05_math_classification_metrics_formula_only.md). The point here is only that it was never stated in [`task4_Who_Speaks_What.md`](../faio-2025/qualification/task4_Who_Speaks_What.md) — it had to be inferred from the solution notebook's `classification_report` and its `scoring="f1_macro"` grid search. When the statement is silent, look at whatever reference code ships with it.
 
 ## [problem-first]
 

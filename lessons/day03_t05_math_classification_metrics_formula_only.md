@@ -31,7 +31,7 @@ $$
 - **Weighted**: $\sum_c \text{support}_c \cdot F1_c \,/\, N$ — macro with class sizes as weights.
 - $\text{Balanced accuracy} = \dfrac{1}{K} \sum_c \text{Recall}_c$ — macro-averaged recall.
 - $\text{Specificity}_c = \dfrac{TN_c}{TN_c + FP_c}$; $FPR_c = 1 - \text{Specificity}_c$; Cohen's $\kappa = \dfrac{p_o - p_e}{1 - p_e}$.
-- sklearn: `classification_report(y, ŷ, zero_division=0)`; `f1_score(y, ŷ, average="macro")`.
+- sklearn: `classification_report(y_true, y_pred, zero_division=0)`; `f1_score(y_true, y_pred, average="macro")`.
 
 ## Values worth memorising
 

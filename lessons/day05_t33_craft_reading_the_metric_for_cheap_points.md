@@ -137,7 +137,7 @@ def hit_at_3(Q, G, truth):                     # Q, G L2-normalised
 
 - Re-implement the metric locally before you model. Five lines, then poke it.
 - List what the metric ignores — that list is permission to stop working.
-- Relative error ⇒ small denominators dominate ⇒ validate on the low-`N` slice.
+- Relative error ⇒ small denominators dominate ⇒ validate on the low-$N$ slice.
 - Absolute error ⇒ fight bias, not variance. Check the median residual.
 - A floor turns "not great" into exactly zero: clear it first, polish second.
 - Macro-F1 weights every class equally; read per-class recall and consider `class_weight="balanced"` or augmenting the weak class.

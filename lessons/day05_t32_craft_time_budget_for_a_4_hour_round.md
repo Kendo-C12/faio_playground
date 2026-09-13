@@ -46,7 +46,7 @@ Take the 2025 round as if it were tomorrow's and build the schedule. Six tasks, 
 | 15:25–15:40 | 15 | Slack: the surprise task, or the one bug you have been avoiding. |
 | 15:40–16:00 | 20 | **Frozen.** Validate every file: name, header, row count, ordering, no index column. Upload. Confirm each upload registered. |
 
-Three things to read off that table. The 2025 maths tasks were 12.5% of the points for 6% of the time. The task 6 runtime must be *launched early* because it runs for tens of minutes regardless of how clever you are (see [`day5-t34-speed-on-large-inputs.md`](./day5-t34-speed-on-large-inputs.md)). And nothing after 15:40 is creative work.
+Three things to read off that table. The 2025 maths tasks were 12.5% of the points for 6% of the time. The task 6 runtime must be *launched early* because it runs for tens of minutes regardless of how clever you are (see [`day05_t34_craft_speed_on_large_inputs.md`](./day05_t34_craft_speed_on_large_inputs.md)). And nothing after 15:40 is creative work.
 
 ## [code-first]
 
@@ -99,7 +99,7 @@ The discipline: `fallback_constant` runs at minute 30 for every ML task. `check`
 1. Kill it. You already have a valid `solution.csv` from the baseline; the last 20 minutes is frozen for validation and upload. An unfinished run is worth zero and it risks the file you do have.
 2. Tasks 1, 2 and 3 — 10 points each for roughly two minutes of arithmetic, so about 5 points per minute versus a whole baseline pipeline for one metric score.
 3. Write the fallback: predict a constant near the training median count for every row, save `submit.csv`, then continue. Relative-error scoring gives partial credit for a sane constant.
-4. Because its cost is wall-clock, not effort: 8000 images at 2048×2048 runs for tens of minutes whether or not you are watching. Start it, then work on something else while it runs.
+4. Because its cost is wall-clock, not effort: 8000 images at $2048 \times 2048$ runs for tens of minutes whether or not you are watching. Start it, then work on something else while it runs.
 5. As evidence the format can change between years — 2024 was Yandex.Contest competitive programming with 1 s / 64 MB limits, 2025 had none of that. Budget slack for one task that resembles nothing in the archive.
 6. Only if the new file passes `check()` and you keep the old one on disk until it does. If validation is tight, keep the submitted file and stop.
 

@@ -11,17 +11,15 @@ In a 4-hour round, wall-clock is a scoring term. A correct pipeline that needs f
 
 ## [concept-first]
 
-**Do the arithmetic before you launch.** [`task6_Simple_Objects.md`](../faio-2025/qualification/task6_Simple_Objects.md) says "Your solution will be tested on **8000** images", each "2048 × 2048 pixels".
+**Do the arithmetic before you launch.** [`task6_Simple_Objects.md`](../faio-2025/qualification/task6_Simple_Objects.md) says "Your solution will be tested on **8000** images", each "$2048 \times 2048$ pixels".
 
-```
-0.4 s/image × 8000 = 3200 s = 53 min      — a fifth of the whole round
-1.0 s/image × 8000 = 8000 s = 2 h 13 min  — round over
-0.1 s/image × 8000 =  800 s = 13 min      — fine
-```
+- $0.4 \text{ s/image} \times 8000 = 3200 \text{ s} = 53$ min — a fifth of the whole round
+- $1.0 \text{ s/image} \times 8000 = 8000 \text{ s} = 2$ h 13 min — round over
+- $0.1 \text{ s/image} \times 8000 = 800 \text{ s} = 13$ min — fine
 
 So the per-image budget is roughly 0.1–0.2 s, and you know that *before* writing the loop. Measure ten images, multiply by 800, and decide. This one calculation is the most valuable habit in this lesson.
 
-**Vectorise; never loop over pixels.** A 2048×2048 RGB image is 12.6 million numbers. A Python `for` loop over them costs tens of seconds; the same operation as a numpy expression costs milliseconds, because the loop runs in C over a contiguous buffer. Rule: if an index variable walks over pixels, you have already lost.
+**Vectorise; never loop over pixels.** A $2048 \times 2048$ RGB image is 12.6 million numbers. A Python `for` loop over them costs tens of seconds; the same operation as a numpy expression costs milliseconds, because the loop runs in C over a contiguous buffer. Rule: if an index variable walks over pixels, you have already lost.
 
 ```python
 mask = (np.abs(gray.astype(np.int16) - bg) > 20)     # whole image, one expression
@@ -31,12 +29,10 @@ mask = (np.abs(gray.astype(np.int16) - bg) > 20)     # whole image, one expressi
 
 **`dtype` is a memory decision.** [`Lost_in_the_Museum.md`](../faio-2025/day2/Lost_in_the_Museum.md) wants "exactly 20,000 rows" of D features, D recommended 256 or 512:
 
-```
-20000 × 512 × 8 bytes (float64) = 82 MB
-20000 × 512 × 4 bytes (float32) = 41 MB
-```
+- $20000 \times 512 \times 8$ bytes (float64) $= 82$ MB
+- $20000 \times 512 \times 4$ bytes (float32) $= 41$ MB
 
-Float32 halves it, and cosine similarity does not care. The 20,000 images themselves, at even 224×224×3 uint8, are 3 GB if you hold them all — so you do not: you hold embeddings, not pixels. Also note uint8 pixels become float64 the instant you divide by 255 without care; write `img.astype(np.float32) / 255`.
+Float32 halves it, and cosine similarity does not care. The 20,000 images themselves, at even $224 \times 224 \times 3$ uint8, are 3 GB if you hold them all — so you do not: you hold embeddings, not pixels. Also note uint8 pixels become float64 the instant you divide by 255 without care; write `img.astype(np.float32) / 255`.
 
 **Batch, then free.** The host baseline in [`host-author-s-baseline.ipynb`](../faio-2025/day1/host-author-s-baseline.ipynb) is explicit about this: it defines `memory_usage_gb()` on `psutil.Process(os.getpid()).memory_info().rss`, prints RAM after loading each JSON file, converts each flattened dict to a DataFrame and then `del players, teams, league; gc.collect()`. Inside the LLM loop it does `del inputs, generation; torch.cuda.empty_cache(); gc.collect()` every iteration. That is the pattern: process a batch, write the result, release the batch. The reward is concrete — its prefix filter takes the players corpus "from 35 million rows to 3.8 million", which is a memory fix as much as an accuracy one.
 
@@ -50,7 +46,7 @@ Float32 halves it, and cosine similarity does not care. The 20,000 images themse
 
 Open [`task6_Simple_Objects.md`](../faio-2025/qualification/task6_Simple_Objects.md) and plan the run, not the algorithm.
 
-1. 8000 × 2048² → decode time alone is significant. Load grayscale; never load all images at once.
+1. $8000 \times 2048^2$ → decode time alone is significant. Load grayscale; never load all images at once.
 2. "each figure is a single connected component when considering edge pixels" → the work per image is one threshold plus one `findContours`. Both are C-level and fast, so your runtime is dominated by *file reading*, not by logic. That means the optimisation target is I/O, not cleverness.
 3. Output is "one integer in each row" of `submit.csv` → results are tiny. Append each count to a list and flush the CSV every few hundred images, so a crash at image 7000 does not cost the run.
 4. Nothing in the statement limits tooling — it is the only task in the round that states the opposite, "You may use any programming language and libraries (OpenCV, scikit-image, PIL, etc.)". So use OpenCV's compiled primitives without hesitation.
@@ -110,29 +106,29 @@ df["prefix"] = df.paths.str.split(".", n=1).str[0]      # C loop
 1. One image takes 0.4 s. How long for the 8000 test images of task 6, and what fraction of a 4-hour round is that?
 2. You have a 0.9 s/image solution at 14:00. Name two changes, in order of expected win.
 3. Why does `cv2.IMREAD_GRAYSCALE` speed up more than just the thresholding step?
-4. A 20,000 × 512 embedding matrix: float64 versus float32 in MB, and does cosine similarity care?
+4. A $20{,}000 \times 512$ embedding matrix: float64 versus float32 in MB, and does cosine similarity care?
 5. What is wrong with `out = pd.concat([out, row_df])` inside a loop over 8000 images?
 6. `img.astype(np.int16)` before subtracting the background — why not leave it `uint8`?
 7. You must estimate total runtime but the first image is slower than the rest. How do you measure honestly?
 
 <details><summary>Answers</summary>
 
-1. `0.4 × 8000 = 3200 s = 53 min`, about 22% of the 240-minute round — a fifth of everything you have.
+1. $0.4 \times 8000 = 3200$ s $= 53$ min, about 22% of the 240-minute round — a fifth of everything you have.
 2. First: read grayscale instead of RGB and drop any per-pixel Python loop (usually the bulk of the time). Second: downscale the image before thresholding if the strokes survive it, since cost scales with pixel count. Only then consider parallel processes.
 3. Decoding is a third of the work, the array is a third of the bytes, so every later operation touches a third of the memory — cache behaviour improves along with raw byte count.
-4. `82 MB` float64 versus `41 MB` float32. Cosine similarity is unaffected at this precision; float32 is the correct default.
+4. $82$ MB float64 versus $41$ MB float32. Cosine similarity is unaffected at this precision; float32 is the correct default.
 5. It copies the whole accumulated frame every iteration, so cost is quadratic in the number of images. Collect tuples in a list, build the DataFrame once.
 6. `uint8` arithmetic wraps around: `5 - 250` becomes a large positive number, so the mask is wrong. `int16` is wide enough and half the size of float64.
 7. Time 10–20 images after a warm-up item and use the median per-image time, or read the rate `tqdm` prints once the loop is a few hundred items in.
 
 </details>
 
-**Rep:** time `count_figures` on 10 images of any size you have locally, extrapolate to 8000, and state whether that fits the 12:00–16:00 plan in [`day5-t32-time-budget-for-a-4-hour-round.md`](./day5-t32-time-budget-for-a-4-hour-round.md).
+**Rep:** time `count_figures` on 10 images of any size you have locally, extrapolate to 8000, and state whether that fits the 12:00–16:00 plan in [`day05_t32_craft_time_budget_for_a_4_hour_round.md`](./day05_t32_craft_time_budget_for_a_4_hour_round.md).
 
 ## Traps & 60-second recall
 
 - Time 10 items, multiply by the real count, decide. Always before launching.
-- 0.4 s × 8000 = 53 min. Per-image budget for task 6 is ~0.1–0.2 s.
+- $0.4$ s $\times\ 8000 = 53$ min. Per-image budget for task 6 is ~0.1–0.2 s.
 - No Python loop over pixels. One numpy expression over the whole array.
 - Grayscale when colour carries nothing: a third of the bytes and a third of the decode.
 - float32 for embeddings and features; float64 doubles memory for no gain.

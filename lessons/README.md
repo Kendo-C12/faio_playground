@@ -5,26 +5,46 @@ FAIO = Fizmat AI Olympiad, https://faio.kz/ — 3rd edition, international.
 
 29 files. Study days are **13, 14, 15, 16 and 19 September**; 17–18 September are off.
 
-The day prefix in each filename is the pace signal. If it is the evening of 15 September and you have not finished the `day3-` files, you are behind.
+The day prefix in each filename is the pace signal. If it is the evening of 15 September and you have not finished the `day03_` files, you are behind.
+
+> **Math renders on GitHub.** Formulas are written as LaTeX (`$$…$$` for display, `$…$` inline), which github.com typesets natively. In a plain text editor you will see the raw `$$` instead; VS Code needs the Markdown+Math extension, Obsidian renders it out of the box.
+
+## Filename format
+
+```
+day03_t20_ml_tfidf_and_char_ngrams.md
+ │     │   │
+ │     │   └── kind: math | ml | craft
+ │     └────── topic number, ties back to the rating list
+ └──────────── study day
+```
+
+| Kind | Count | Meaning |
+|---|---|---|
+| `math` | 6 | Pen-and-paper: statistics, probability, Bayes, expected value, metric definitions |
+| `ml` | 19 | Models, features, text, vision, signals — anything you fit or transform |
+| `craft` | 4 | Round tactics: submissions, time budget, metric reading, speed |
+
+Files ending `_formula_only` cover topics you rated **3** — no teaching, just formulas, memorisable values and traps.
 
 ## The 5 days
 
-| Day | Date | Theme | Files | Real total |
+| Day | Date | Theme | Files | Total |
 |---|---|---|---|---|
-| 1 | Sat 13 Sep | Tabular workflow end to end | 5 | 160 min |
+| 1 | Sat 13 Sep | Tabular workflow end to end | 5 | 200 min |
 | 2 | Sun 14 Sep | The model family you cannot yet use | 5 | 190 min |
 | 3 | Mon 15 Sep | Text path + metrics | 7 | 225 min |
 | 4 | Tue 16 Sep | Vision, embeddings, signals | 7 | **335 min** |
 | — | Wed 17 – Thu 18 Sep | off | — | — |
 | 5 | Fri 19 Sep | RAG, expected value, exam craft + dry run | 5 | 200 min |
 
-**Day 4 is overweight at 5 h 35 m** — the per-file estimates came out higher than planned, and every file on that day is rated 0 or 1 so none can be skimmed. If 16 September cannot absorb it, move `day4-t26-fft-and-spectral-features.md` and `day4-t22-embeddings-and-cosine-retrieval.md` to day 5: day 4 drops to 235 min and day 5 rises to 300 min, but day 5's three exam-craft files are light and can be read the morning of the exam.
+**Day 4 is overweight at 5 h 35 m** — every file on it is rated 0 or 1, so none can be skimmed. If 16 September cannot absorb it, move `day04_t26_ml_fft_and_spectral_features.md` and `day04_t22_ml_embeddings_and_cosine_retrieval.md` to day 5: day 4 drops to 235 min, day 5 rises to 300 min, and day 5's three `craft` files are light enough to read on exam morning.
 
-Grand total: **1110 minutes ≈ 18.5 hours** over 5 days.
+Grand total: **1150 minutes ≈ 19 hours** over 5 days.
 
 ## How a file is built
 
-Full lessons carry all four styles so one file serves whichever mood you are in:
+Full lessons carry all four styles, so one file serves whichever mood you are in:
 
 - `[concept-first]` — theory, then a worked example
 - `[problem-first]` — open the anchor task, derive what it forces you to know
@@ -32,69 +52,69 @@ Full lessons carry all four styles so one file serves whichever mood you are in:
 - `[drill]` — questions with answers folded below, plus one past-task rep
 - `Traps & 60-second recall` — what to reread the night before
 
-Files ending `-formula-only` cover topics you rated **3** (can implement from scratch). No teaching, no derivation — formulas, memorisable values, one-line traps, under 40 lines each.
+Every file opens with its **anchor task**: the real statement in this repo the topic comes from. Every worked example traces to a cited path.
 
-Every file opens with its **anchor task**: the real statement in this repo that the topic comes from. Every worked example traces to a cited path.
+## Day 1 — Sat 13 Sep · tabular workflow · 200 min
 
-## Day 1 — Sat 13 Sep · tabular workflow · 160 min
+| File | Kind | Topic | Rating | Rank | Min |
+|---|---|---|---|---|---|
+| [t18](./day01_t18_ml_pandas_eda_and_submission_frames.md) | ml | pandas: read, groupby/agg, merge, submission frames | 2 | 1 | 50 |
+| [t16](./day01_t16_ml_feature_engineering.md) | ml | Feature engineering: build, scale, encode, select | 1 | 1 | 50 |
+| [t07](./day01_t07_ml_cross_validation_and_leakage.md) | ml | **Cross-validation and leakage** | 1 | 1 | 50 |
+| [t31](./day01_t31_craft_submission_discipline.md) | craft | Submission discipline: filename, header, row count, order | 2 | 1 | 40 |
+| [t01](./day01_t01_math_descriptive_statistics_formula_only.md) | math | Descriptive statistics — formula sheet | 3 | 1 | 10 |
 
-| File | Topic | Rating | Rank | Min |
-|---|---|---|---|---|
-| [day1-t18](./day1-t18-pandas-eda-and-submission-frames.md) | pandas: read, groupby/agg, merge, submission frames | 2 | 1 | 50 |
-| [day1-t16](./day1-t16-feature-engineering.md) | Feature engineering: build, scale, encode, select | 1 | 1 | 50 |
-| [day1-t31](./day1-t31-submission-discipline.md) | Submission discipline: filename, header, row count, order | 2 | 1 | 40 |
-| [day1-t01](./day1-t01-descriptive-stats-formula-only.md) | Descriptive statistics — formula sheet | 3 | 1 | 10 |
-| [day1-t07](./day1-t07-cross-validation-and-leakage-formula-only.md) | Cross-validation & leakage — formula sheet | 3 | 1 | 10 |
+T07 was re-rated from 3 to 1 and is now a full lesson, not a sheet. It is the one that stops you trusting a fake 0.99 on task 5.
 
 ## Day 2 — Sun 14 Sep · the model family · 190 min
 
-| File | Topic | Rating | Rank | Min |
-|---|---|---|---|---|
-| [day2-t12](./day2-t12-gradient-boosting.md) | **Gradient boosting** — from zero | 0 | 1 | 55 |
-| [day2-t10](./day2-t10-knn-and-decision-trees.md) | kNN and decision trees | 1 | 2 | 45 |
-| [day2-t11](./day2-t11-random-forest-and-bagging.md) | Random forest and bagging | 1 | 2 | 45 |
-| [day2-t19](./day2-t19-hyperparameter-search.md) | Hyperparameter search | 2 | 1 | 35 |
-| [day2-t08](./day2-t08-logistic-regression-formula-only.md) | Logistic regression — formula sheet | 3 | 1 | 10 |
+| File | Kind | Topic | Rating | Rank | Min |
+|---|---|---|---|---|---|
+| [t12](./day02_t12_ml_gradient_boosting.md) | ml | **Gradient boosting** — from zero | 0 | 1 | 55 |
+| [t10](./day02_t10_ml_knn_and_decision_trees.md) | ml | kNN and decision trees | 1 | 2 | 45 |
+| [t11](./day02_t11_ml_random_forest_and_bagging.md) | ml | Random forest and bagging | 1 | 2 | 45 |
+| [t19](./day02_t19_ml_hyperparameter_search.md) | ml | Hyperparameter search | 2 | 1 | 35 |
+| [t08](./day02_t08_ml_logistic_regression_formula_only.md) | ml | Logistic regression — formula sheet | 3 | 1 | 10 |
 
-Start with t12. It is the only rank-1 topic you rated 0 in this group, and boosting is the default first model on tabular data in a timed round.
+Start with t12: the only rank-1 topic you rated 0 here, and boosting is the default first model on tabular data in a timed round.
 
 ## Day 3 — Mon 15 Sep · text path + metrics · 225 min
 
-| File | Topic | Rating | Rank | Min |
-|---|---|---|---|---|
-| [day3-t20](./day3-t20-tfidf-and-char-ngrams.md) | TF-IDF, bag of words, char n-grams | 1 | 1 | 50 |
-| [day3-t21](./day3-t21-text-augmentation-and-normalisation.md) | **Text augmentation and normalisation** | 0 | 1 | 50 |
-| [day3-t23](./day3-t23-pretrained-transformers.md) | Pretrained transformers | 1 | 1 | 55 |
-| [day3-t06](./day3-t06-custom-and-competition-metrics.md) | Custom and competition metrics | 2 | 1 | 40 |
-| [day3-t02](./day3-t02-classical-probability-formula-only.md) | Classical probability — formula sheet | 3 | 1 | 10 |
-| [day3-t03](./day3-t03-bayes-and-conditional-probability-formula-only.md) | Bayes & conditional probability — formula sheet | 3 | 1 | 10 |
-| [day3-t05](./day3-t05-classification-metrics-formula-only.md) | Classification metrics — formula sheet | 3 | 1 | 10 |
+| File | Kind | Topic | Rating | Rank | Min |
+|---|---|---|---|---|---|
+| [t20](./day03_t20_ml_tfidf_and_char_ngrams.md) | ml | TF-IDF, bag of words, char n-grams | 1 | 1 | 50 |
+| [t21](./day03_t21_ml_text_augmentation_and_normalisation.md) | ml | **Text augmentation and normalisation** | 0 | 1 | 50 |
+| [t23](./day03_t23_ml_pretrained_transformers.md) | ml | Pretrained transformers | 1 | 1 | 55 |
+| [t06](./day03_t06_math_custom_and_competition_metrics.md) | math | Custom and competition metrics | 2 | 1 | 40 |
+| [t02](./day03_t02_math_classical_probability_formula_only.md) | math | Classical probability — formula sheet | 3 | 1 | 10 |
+| [t03](./day03_t03_math_bayes_and_conditional_probability_formula_only.md) | math | Bayes & conditional probability — formula sheet | 3 | 1 | 10 |
+| [t05](./day03_t05_math_classification_metrics_formula_only.md) | math | Classification metrics — formula sheet | 3 | 1 | 10 |
 
 t20 + t21 together rebuild the 2025 qualification's task 4. t21 is the augmentation trick the shipped solution notebook actually wins with.
 
 ## Day 4 — Tue 16 Sep · vision, embeddings, signals · 335 min
 
-| File | Topic | Rating | Rank | Min |
-|---|---|---|---|---|
-| [day4-t27](./day4-t27-image-basics-and-thresholding.md) | Image arrays and thresholding | 1 | 1 | 45 |
-| [day4-t28](./day4-t28-contours-and-connected-components.md) | **Contours and connected components** | 0 | 1 | 50 |
-| [day4-t29](./day4-t29-shape-descriptors.md) | Shape descriptors | 0 | 1 | 45 |
-| [day4-t30](./day4-t30-cnn-transfer-learning.md) | CNN transfer learning | 1 | 2 | 50 |
-| [day4-t22](./day4-t22-embeddings-and-cosine-retrieval.md) | Embeddings and cosine retrieval | 0 | 2 | 50 |
-| [day4-t25](./day4-t25-sensor-window-features.md) | Sensor window features | 0 | 1 | 45 |
-| [day4-t26](./day4-t26-fft-and-spectral-features.md) | FFT and spectral features | 0 | 2 | 50 |
+| File | Kind | Topic | Rating | Rank | Min |
+|---|---|---|---|---|---|
+| [t27](./day04_t27_ml_image_basics_and_thresholding.md) | ml | Image arrays and thresholding | 1 | 1 | 45 |
+| [t28](./day04_t28_ml_contours_and_connected_components.md) | ml | **Contours and connected components** | 0 | 1 | 50 |
+| [t29](./day04_t29_ml_shape_descriptors.md) | ml | Shape descriptors | 0 | 1 | 45 |
+| [t30](./day04_t30_ml_cnn_transfer_learning.md) | ml | CNN transfer learning | 1 | 2 | 50 |
+| [t22](./day04_t22_ml_embeddings_and_cosine_retrieval.md) | ml | Embeddings and cosine retrieval | 0 | 2 | 50 |
+| [t25](./day04_t25_ml_sensor_window_features.md) | ml | Sensor window features | 0 | 1 | 45 |
+| [t26](./day04_t26_ml_fft_and_spectral_features.md) | ml | FFT and spectral features | 0 | 2 | 50 |
 
 t27 + t28 + t29 rebuild task 6, and t28 alone solves it. t25 rebuilds task 5.
 
 ## Day 5 — Fri 19 Sep · retrieval and exam craft · 200 min
 
-| File | Topic | Rating | Rank | Min |
-|---|---|---|---|---|
-| [day5-t24](./day5-t24-rag-and-bm25-retrieval.md) | RAG and BM25 retrieval | 1 | 2 | 55 |
-| [day5-t04](./day5-t04-expected-value.md) | Expected value | 2 | 2 | 35 |
-| [day5-t32](./day5-t32-time-budget-for-a-4-hour-round.md) | Time budget for a 4-hour round | 0 | 1 | 35 |
-| [day5-t33](./day5-t33-reading-the-metric-for-cheap-points.md) | Reading the metric for cheap points | 0 | 1 | 35 |
-| [day5-t34](./day5-t34-speed-on-large-inputs.md) | Speed on large inputs | 0 | 1 | 40 |
+| File | Kind | Topic | Rating | Rank | Min |
+|---|---|---|---|---|---|
+| [t24](./day05_t24_ml_rag_and_bm25_retrieval.md) | ml | RAG and BM25 retrieval | 1 | 2 | 55 |
+| [t04](./day05_t04_math_expected_value.md) | math | Expected value | 2 | 2 | 35 |
+| [t32](./day05_t32_craft_time_budget_for_a_4_hour_round.md) | craft | Time budget for a 4-hour round | 0 | 1 | 35 |
+| [t33](./day05_t33_craft_reading_the_metric_for_cheap_points.md) | craft | Reading the metric for cheap points | 0 | 1 | 35 |
+| [t34](./day05_t34_craft_speed_on_large_inputs.md) | craft | Speed on large inputs | 0 | 1 | 40 |
 
 No new heavy theory. Read t32 last and run a timed mock against the 2025 qualification statements.
 
@@ -116,7 +136,7 @@ Nothing landed at rank 4 — every 2025 day-1/day-2 topic (embeddings, RAG, FFT,
 
 ## Not written yet — rank 3+ backlog
 
-Five topics fell below the rank cut and have no file: **t09** least squares, **t13** SVM, **t14** k-means, **t17** outlier detection (IQR / z-score), **t15** PCA. All four of the first are anchored only in `faio-2024/day1/`; PCA only in mlcourse.ai. If a day frees up, **t17 is the one worth adding** — cheap to learn and plausible in any data-cleaning task.
+Five topics fell below the rank cut and have no file: **t09** least squares, **t13** SVM, **t14** k-means, **t17** outlier detection (IQR / z-score), **t15** PCA. The first four are anchored only in `faio-2024/day1/`; PCA only in mlcourse.ai. If a day frees up, **t17 is the one worth adding** — cheap to learn and plausible in any data-cleaning task.
 
 ## Known defects in the archive statements
 
