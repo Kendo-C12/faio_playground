@@ -15,10 +15,12 @@ A hyperparameter is a setting you choose before fitting (`C`, `max_depth`, `lear
 
 **The cost formula, the only arithmetic that matters in a timed round:**
 
-```
-fits = (number of grid points) × cv        (+1 for the final refit)
-wall clock ≈ fits × (time of one fit) / n_jobs
-```
+$$
+\begin{aligned}
+\text{fits} &= (\text{number of grid points}) \times \text{cv} && (+1 \text{ for the final refit}) \\
+\text{wall clock} &\approx \frac{\text{fits} \times (\text{time of one fit})}{\texttt{n\_jobs}}
+\end{aligned}
+$$
 
 `n_jobs=-1` uses every core: the cheapest speedup there is, identical results, only the clock changes — at the price of one copy of the data per worker.
 
@@ -43,7 +45,7 @@ grid = GridSearchCV(LogisticRegression(max_iter=1000), param_grid,
 
 Dissect it.
 
-- **Size.** `4 × 2 × 2 × 2 = 32` points, `cv=3` → `32 × 3 = 96` fits, plus 1 refit = **97**. On a 20,000-feature TF-IDF matrix that is minutes, not seconds — which is plausibly why it ships commented out and the result hard-coded instead.
+- **Size.** $4 \times 2 \times 2 \times 2 = 32$ points, `cv=3` → $32 \times 3 = 96$ fits, plus 1 refit = **97**. On a 20,000-feature TF-IDF matrix that is minutes, not seconds — which is plausibly why it ships commented out and the result hard-coded instead.
 - **`cv=3`, not 5.** A deliberate cost cut: 3 folds instead of 5 is 40 % fewer fits for a slightly noisier estimate. The right trade when you are ranking 32 candidates rather than reporting a final number.
 - **`scoring="f1_macro"`.** Three classes, macro averaging, so every language counts equally regardless of how many messages it has. Matching the metric is the point; here the notebook had to choose one because the statement does not state it.
 - **Solver/penalty validity.** `l1` works with both `saga` and `liblinear`, so this grid is legal — but in general not every solver takes every penalty (`lbfgs` has no L1), scikit-learn raises on an illegal pair, and `error_score` decides whether that kills the search. Pass a **list of dicts** so each solver only gets its own penalties. `n_jobs=-1` spreads the 97 fits over all cores.
@@ -91,7 +93,7 @@ rnd.fit(X, y)
 print(rnd.best_params_, rnd.best_score_)
 ```
 
-Time-budget rule for a 4-hour round: **no single search longer than 15 minutes, and none at all until you have a valid submission file on disk.** Time one fit first (`%time model.fit(...)`), multiply by `points × folds / cores`, and shrink the grid until the product fits. A tuned model you never submitted scores zero (T31).
+Time-budget rule for a 4-hour round: **no single search longer than 15 minutes, and none at all until you have a valid submission file on disk.** Time one fit first (`%time model.fit(...)`), multiply by $\dfrac{\text{points} \times \text{folds}}{\text{cores}}$, and shrink the grid until the product fits. A tuned model you never submitted scores zero (T31).
 
 ## [drill]
 
@@ -104,7 +106,7 @@ Time-budget rule for a 4-hour round: **no single search longer than 15 minutes, 
 
 <details><summary>Answers</summary>
 
-1. `4 × 2 × 2 × 2 = 32` points × 3 folds = 96, plus 1 refit on the full data = **97**.
+1. $4 \times 2 \times 2 \times 2 = 32$ points $\times$ 3 folds = 96, plus 1 refit on the full data = **97**.
 2. Cost. 32 candidates need ranking, not precise measurement; 3 folds is 40 % fewer fits for slightly more noise.
 3. You select the configuration that balances per-class recall best rather than the one that gets the most rows right — typically a `class_weight="balanced"` setting that trades majority-class accuracy away.
 4. Once you have more than two or three knobs, or knobs that are continuous. A grid spends its budget resolving unimportant dimensions finely; random sampling covers the important ones better per fit.
@@ -117,7 +119,7 @@ Time-budget rule for a 4-hour round: **no single search longer than 15 minutes, 
 
 ## Traps & 60-second recall
 
-- `fits = points × folds (+1 refit)`. Compute it before you press run, every time.
+- $\text{fits} = \text{points} \times \text{folds}$ (+1 refit). Compute it before you press run, every time.
 - `scoring` must be the competition's metric — accuracy for task 5, the notebook's `f1_macro` for task 4.
 - Illegal parameter pairs (solver vs penalty) break a grid; use a list of dicts.
 - `n_jobs=-1` always; watch memory on large sparse matrices.

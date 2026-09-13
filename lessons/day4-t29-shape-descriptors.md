@@ -12,21 +12,47 @@ T28 turned an image into a list of contours. This turns each contour into number
 
 Every descriptor below is computed from one contour — the point array `cv2.findContours` returned.
 
-**Vertex count.** `cv2.approxPolyDP(c, eps, True)` replaces the contour with a polygon whose vertices deviate from it by at most `eps` pixels (Ramer–Douglas–Peucker). Set `eps` as a *fraction of perimeter*, not an absolute: `eps = 0.02 * cv2.arcLength(c, True)`. Then `len(approx)` is 3 for a triangle, 4 for a rectangle, and ≥ 8 for a circle. Scale-free because `eps` scales with the shape.
+**Vertex count.** `cv2.approxPolyDP(c, eps, True)` replaces the contour with a polygon whose vertices deviate from it by at most `eps` pixels (Ramer–Douglas–Peucker). Set `eps` as a *fraction of perimeter*, not an absolute: `eps = 0.02 * cv2.arcLength(c, True)`. Then `len(approx)` is 3 for a triangle, 4 for a rectangle, and $\ge 8$ for a circle. Scale-free because `eps` scales with the shape.
 
 `eps` too small → a circle keeps 40 vertices and an anti-aliased triangle reports 5. `eps` too large → a rectangle collapses to a triangle. `0.02`–`0.04` is the usable band; verify on known shapes.
 
-**Circularity** is `4 * pi * A / P^2`, with `A = cv2.contourArea(c)` and `P = cv2.arcLength(c, True)`. A perfect circle gives 1.0, a square ≈ 0.785, an equilateral triangle ≈ 0.605, a long thin sliver → 0. It is the cleanest single number for "circle or not", invariant to translation, rotation and scale — but **not** robust to a jagged boundary, since noise inflates `P` while leaving `A` alone. Smooth the mask before trusting it.
+**Circularity** is
 
-**Aspect ratio and extent.** `x, y, w, h = cv2.boundingRect(c)` is the axis-aligned box; `aspect = w / h`, `extent = A / (w * h)`. Extent ≈ 1 for an axis-aligned rectangle, ≈ 0.785 for a circle, ≈ 0.5 for a triangle. Both are rotation-*dependent*: a square turned 45° has extent 0.5, indistinguishable from a triangle. `cv2.minAreaRect(c)` gives the rotated box and fixes it — extent against *its* area is ≈ 1 for a rectangle at any angle.
+$$
+\text{circularity} = \frac{4\pi A}{P^2}
+$$
 
-**Solidity.** `A / cv2.contourArea(cv2.convexHull(c))`. Convex shapes — all three of task 6's — give ≈ 1, so it separates convex from concave: useless for classifying here, valuable for spotting merges and for letters.
+with `A = cv2.contourArea(c)` and `P = cv2.arcLength(c, True)`. A perfect circle gives 1.0, a square $\approx 0.785$, an equilateral triangle $\approx 0.605$, a long thin sliver tends to 0. It is the cleanest single number for "circle or not", invariant to translation, rotation and scale — but **not** robust to a jagged boundary, since noise inflates $P$ while leaving $A$ alone. Smooth the mask before trusting it.
 
-**Image moments.** `M = cv2.moments(c)` gives raw moments `m_pq = Σ x^p y^q`: area `m00`, centroid `(m10/m00, m01/m00)`. Subtract the centroid → *central* moments `mu_pq` (translation-invariant). Divide by a power of `m00` → *normalised* central moments `nu_pq` (+ scale-invariant).
+**Aspect ratio and extent.** `x, y, w, h = cv2.boundingRect(c)` is the axis-aligned box, and
 
-**The 7 Hu moments.** `cv2.HuMoments(M)` combines the `nu_pq` into 7 values that are additionally **rotation**-invariant. So the invariance ladder is: raw → nothing; central → translation; normalised central → + scale; Hu → + rotation. The 7th also flips sign under reflection, so it detects mirroring. They span many orders of magnitude — always compare them as `sign(h) * log10(|h|)`.
+$$
+\text{aspect} = \frac{w}{h}
+\qquad
+\text{extent} = \frac{A}{w h}
+$$
 
-Worked example — the whole task 6 shape taxonomy from two numbers: with `v = len(approxPolyDP(c, 0.02 * P, True))` and `circ = 4*pi*A/P^2`, `v == 3` is a triangle, `v == 4` a rectangle, and `circ > 0.8` a circle. Anything left over is a mask defect, not a fourth shape.
+Extent is $\approx 1$ for an axis-aligned rectangle, $\approx 0.785$ for a circle, $\approx 0.5$ for a triangle. Both are rotation-*dependent*: a square turned 45° has extent 0.5, indistinguishable from a triangle. `cv2.minAreaRect(c)` gives the rotated box and fixes it — extent against *its* area is $\approx 1$ for a rectangle at any angle.
+
+**Solidity** divides the area by the area $A_{\text{hull}}$ of the convex hull, `cv2.contourArea(cv2.convexHull(c))`:
+
+$$
+\text{solidity} = \frac{A}{A_{\text{hull}}}
+$$
+
+Convex shapes — all three of task 6's — give $\approx 1$, so it separates convex from concave: useless for classifying here, valuable for spotting merges and for letters.
+
+**Image moments.** `M = cv2.moments(c)` gives raw moments
+
+$$
+M_{pq} = \sum_{x} \sum_{y} x^p y^q
+$$
+
+so the area is $M_{00}$ and the centroid is $(M_{10}/M_{00},\, M_{01}/M_{00})$. Subtract the centroid and you get the *central* moments $\mu_{pq}$ (translation-invariant). Divide by a power of $M_{00}$ and you get the *normalised* central moments $\nu_{pq}$ (+ scale-invariant).
+
+**The 7 Hu moments.** `cv2.HuMoments(M)` combines the $\nu_{pq}$ into 7 values that are additionally **rotation**-invariant. So the invariance ladder is: raw → nothing; central → translation; normalised central → + scale; Hu → + rotation. The 7th also flips sign under reflection, so it detects mirroring. They span many orders of magnitude — always compare them as $\operatorname{sign}(h) \log_{10} \lvert h \rvert$.
+
+Worked example — the whole task 6 shape taxonomy from two numbers: with `v = len(approxPolyDP(c, 0.02 * P, True))` and $\text{circ} = 4\pi A / P^2$, `v == 3` is a triangle, `v == 4` a rectangle, and `circ > 0.8` a circle. Anything left over is a mask defect, not a fourth shape.
 
 ## [problem-first]
 
@@ -38,7 +64,7 @@ Be honest about that parenthesis. Descriptors earn their place in task 6 only wh
 2. **Separating speckle from figure.** An area floor alone also deletes genuinely tiny circles; area *plus* circularity is the safer filter.
 3. **Auditing your mask.** If the descriptors over a training image do not form three clean clusters (v=3, v=4, high circularity), your threshold is wrong — before the count is.
 
-Now open [`qaz_letters.md`](../faio-2025/day1/qaz_letters.md). The situation inverts: the jury hands you a tabular dataset where the visual information of each of 42 Kazakh letters "has been distilled into handcrafted numerical features" — Hu moments ("7 invariant moments describing shape, rotation, scale invariant"), contour counts and areas via OpenCV, radial distances from the centroid, Fourier descriptors of contours, symmetry measures, horizontal/vertical projections, 4×4 zoning, DCT, wavelets. No images at all.
+Now open [`qaz_letters.md`](../faio-2025/day1/qaz_letters.md). The situation inverts: the jury hands you a tabular dataset where the visual information of each of 42 Kazakh letters "has been distilled into handcrafted numerical features" — Hu moments ("7 invariant moments describing shape, rotation, scale invariant"), contour counts and areas via OpenCV, radial distances from the centroid, Fourier descriptors of contours, symmetry measures, horizontal/vertical projections, $4 \times 4$ zoning, DCT, wavelets. No images at all.
 
 So the lesson is dual-use: in task 6 you *compute* descriptors and may discard them; in `qaz_letters` the descriptors **are** the dataset, and the job is reading the column list to know what each can and cannot distinguish. Sharpest consequence: rotation-invariant features cannot separate letters differing only by orientation, and scale-invariant ones cannot separate letters differing only in size — so for the nine Kazakh letters distinguished by a diacritic, the *non*-invariant zoning and projection features carry the signal.
 
@@ -95,7 +121,7 @@ print("merged suspects:", sum(d["solidity"] < 0.9 for d in ds))   # should be ~0
 
 <details><summary>Answers</summary>
 
-1. 1.0, ≈ 0.785 (`pi/4`), ≈ 0.605.
+1. $1.0$, $\approx 0.785$ (that is $\pi/4$), $\approx 0.605$.
 2. `eps` is too small, so anti-aliasing steps survive as corners. Raise it toward `0.03`–`0.04 * arcLength`, or smooth/close the mask first.
 3. Raw moments: no invariance. Central (centroid-subtracted): translation. Normalised central: + scale. Hu: + rotation, and `hu[6]` changes sign under reflection.
 4. Hu moments are rotation- and scale-invariant, which *destroys* exactly the information distinguishing letters that differ by orientation, size or a small diacritic. Zoning and projections are position-sensitive and keep it.
@@ -109,9 +135,9 @@ print("merged suspects:", sum(d["solidity"] < 0.9 for d in ds))   # should be ~0
 ## Traps & 60-second recall
 
 - `approxPolyDP` eps must be a fraction of perimeter, never a fixed pixel count.
-- `circularity = 4*pi*A/P^2`: 1.0 circle, 0.785 square, 0.605 triangle.
+- Circularity $= 4\pi A / P^2$: 1.0 circle, 0.785 square, 0.605 triangle.
 - Aspect ratio and axis-aligned extent are rotation-dependent; `minAreaRect` fixes both.
-- Solidity ≈ 1 for all of task 6's shapes, so a low value means a merge, not a new shape.
+- Solidity $\approx 1$ for all of task 6's shapes, so a low value means a merge, not a new shape.
 - Log-scale Hu moments before feeding any model; invariance is a cost, not a virtue, so never use a rotation-invariant feature to separate rotations.
 - Task 6 never needs classification; compute descriptors as a sanity check on the count, not as the deliverable.
 - When the jury already hands you the features (`qaz_letters`), this lesson is for *reading* the column list, not recomputing it.

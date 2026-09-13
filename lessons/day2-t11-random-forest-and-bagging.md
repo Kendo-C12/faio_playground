@@ -12,17 +12,17 @@ External reference: mlcourse.ai topic 5, "Bagging and random forest" (not fetche
 
 A single deep tree (T10) has low bias and high variance: change a few training rows and the whole tree changes. Bagging attacks exactly that variance.
 
-**Bootstrap.** Sample `n` rows **with replacement** from the `n` training rows. Each bootstrap sample contains about 63.2 % of the distinct rows (`1 − (1−1/n)ⁿ → 1 − e⁻¹`); the rest are duplicates. Fit one tree per sample, average the predictions (classification: majority vote or averaged probabilities).
+**Bootstrap.** Sample $n$ rows **with replacement** from the $n$ training rows. Each bootstrap sample contains about 63.2 % of the distinct rows ($1 - (1 - 1/n)^n \to 1 - e^{-1}$); the rest are duplicates. Fit one tree per sample, average the predictions (classification: majority vote or averaged probabilities).
 
-**Why averaging reduces variance.** For `B` predictors each of variance `σ²` with pairwise correlation `ρ`:
+**Why averaging reduces variance.** For $B$ predictors each of variance $\sigma^2$ with pairwise correlation $\rho$:
 
-```
-Var(mean) = ρσ² + (1−ρ)σ²/B
-```
+$$
+\operatorname{Var}(\text{mean}) = \rho\sigma^2 + \frac{(1 - \rho)\sigma^2}{B}
+$$
 
-Raising `B` kills the second term but not the first. So the gain depends on **decorrelating** the trees — and bootstrap alone leaves them quite correlated, because one dominant feature gets picked at the root of every tree.
+Raising $B$ kills the second term but not the first. So the gain depends on **decorrelating** the trees — and bootstrap alone leaves them quite correlated, because one dominant feature gets picked at the root of every tree.
 
-**Feature subsampling — what makes it a *random* forest.** At every split, consider only a random subset of `max_features` columns. That is the second source of randomness, and it is what drives `ρ` down. Defaults: `√p` features for classification, `p` (or `1.0`) for regression, where `p` is the number of columns.
+**Feature subsampling — what makes it a *random* forest.** At every split, consider only a random subset of `max_features` columns. That is the second source of randomness, and it is what drives $\rho$ down. Defaults: $\sqrt{p}$ features for classification, $p$ (or `1.0`) for regression, where $p$ is the number of columns.
 
 So: random forest = bagging of deep trees + per-split feature subsampling. Bias stays roughly that of one deep tree; variance drops. This is why you grow trees **deep** in an RF (`max_depth=None`) and control overfitting with `n_estimators` and `min_samples_leaf` instead.
 
@@ -95,9 +95,9 @@ for B in (10, 50, 100, 300, 500):
 
 <details><summary>Answers</summary>
 
-1. About 63.2 %: the chance a given row is never drawn in `n` draws with replacement is `(1−1/n)ⁿ → e⁻¹ ≈ 0.368`.
+1. About 63.2 %: the chance a given row is never drawn in $n$ draws with replacement is $(1 - 1/n)^n \to e^{-1} \approx 0.368$.
 2. Extra trees only average more samples of the same estimator — they shrink the variance term, they do not add capacity. Depth adds capacity, so it can memorise.
-3. Decorrelation. With all features available, one dominant column is chosen at most roots and the trees stay similar, leaving the `ρσ²` floor in place.
+3. Decorrelation. With all features available, one dominant column is chosen at most roots and the trees stay similar, leaving the $\rho\sigma^2$ floor in place.
 4. OOB cannot respect groups, so rows of the same task 5 repetition sat in the bootstrap and the OOB set at once. Trust the grouped CV.
 5. It is correlated with another feature that absorbed the credit; or the impurity measure favours continuous high-cardinality columns over it. Check with permutation importance.
 6. When you have almost no time to tune and need a defensible number immediately; and when the dataset is small enough (a few hundred rows, as in task 5) that boosting's extra capacity mostly buys variance.
@@ -108,7 +108,7 @@ for B in (10, 50, 100, 300, 500):
 
 ## Traps & 60-second recall
 
-- Bootstrap ≈ 63.2 % distinct rows; the held-out 36.8 % becomes the OOB estimate.
+- Bootstrap $\approx$ 63.2 % distinct rows; the held-out 36.8 % becomes the OOB estimate.
 - `n_estimators`: more is safer, only slower. `max_features`: the knob that decorrelates.
 - Grow trees deep in an RF; control it with `min_samples_leaf`, not `max_depth`.
 - `n_jobs=-1` every time — it is free speed in a 4-hour round.

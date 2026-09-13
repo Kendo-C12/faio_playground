@@ -57,9 +57,9 @@ What the guarantee still leaves you to get right:
 
 1. A hollow figure is one component but **two** contours → `RETR_EXTERNAL`, not `RETR_LIST`.
 2. The guarantee is about *edge pixels*, so the mask must hold the strokes and nothing else — T27's per-image background mode.
-3. It assumes your mask did not break the stroke; a tight tolerance splits one figure into several components → close with a 3×3 kernel.
-4. Relative error makes an off-by-three cost 3/100 on a low-`N` image and 3/500 on a high-`N` one — validate on the low-count training images.
-5. 8000 images at 2048×2048: read grayscale, one pass, no Python pixel loops.
+3. It assumes your mask did not break the stroke; a tight tolerance splits one figure into several components → close with a $3 \times 3$ kernel.
+4. Relative error makes an off-by-three cost $3/100$ on a low-$N$ image and $3/500$ on a high-$N$ one — validate on the low-count training images.
+5. 8000 images at $2048 \times 2048$: read grayscale, one pass, no Python pixel loops.
 
 ## [code-first]
 
@@ -99,8 +99,8 @@ Tune `TOL` and the area floor against `train.csv`, which carries the true counts
 2. Your count is 612 where truth is 310. Name the most likely single cause.
 3. Your count is 4180 where truth is 310. Name the most likely single cause.
 4. `connectedComponentsWithStats` returns `n_labels = 301`. How many figures?
-5. Why does a 9×9 closing kernel lower your score even though it fixes broken strokes?
-6. ŷ = 2y on task 6 — compute Error Rate, Accuracy, and the final verdict.
+5. Why does a $9 \times 9$ closing kernel lower your score even though it fixes broken strokes?
+6. $\hat{y} = 2y$ on task 6 — compute Error Rate, Accuracy, and the final verdict.
 
 <details><summary>Answers</summary>
 
@@ -109,18 +109,18 @@ Tune `TOL` and the area floor against `train.csv`, which carries the true counts
 3. 4-connectivity on diagonal strokes — rotated edges fragment into hundreds of one-pixel components. (A too-tight tolerance breaking strokes does the same, less dramatically.)
 4. 300. Label 0 is the background, so subtract one.
 5. It dilates by 4 pixels before eroding, so two nearby but distinct figures merge into one component and you undercount.
-6. Error Rate `= |2y − y| / y = 1`. Accuracy `= 1 − min(1, 1) = 0`. That is below the 0.55 floor, so the verdict is 0.
+6. Error Rate $= \lvert 2y - y \rvert / y = 1$. Accuracy $= 1 - \min(1, 1) = 0$. That is below the 0.55 floor, so the verdict is 0.
 
 </details>
 
-**Rep:** write `count_figures(path)` returning one integer, run it over every training image, and plot predicted against true count. Report mean `|ŷ − y| / y` separately for images with `y < 150` and `y > 400` — the relative metric makes the first group the one that decides your score.
+**Rep:** write `count_figures(path)` returning one integer, run it over every training image, and plot predicted against true count. Report mean $\lvert \hat{y} - y \rvert / y$ separately for images with $y < 150$ and $y > 400$ — the relative metric makes the first group the one that decides your score.
 
 ## Traps & 60-second recall
 
 - `RETR_EXTERNAL` for counting. `RETR_LIST` roughly doubles the count on hollow shapes and is the one mistake that zeroes the task.
 - 8-connectivity, because diagonal strokes are not 4-connected.
 - `connectedComponentsWithStats` minus 1 for the background label; it ignores holes for free.
-- Close with a 3×3 kernel to repair breaks; bigger kernels merge distinct figures.
+- Close with a $3 \times 3$ kernel to repair breaks; bigger kernels merge distinct figures.
 - Filter contours by area, but keep the floor low — genuine small figures exist.
 - `findContours` wants single-channel `uint8` with non-zero foreground.
 - Cross-check `RETR_EXTERNAL` against `connectedComponentsWithStats`; disagreement means your mask is wrong.

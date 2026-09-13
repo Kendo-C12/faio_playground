@@ -14,17 +14,17 @@ A feature is a number the model can use. Feature engineering is deciding which n
 
 *Build.* Turn raw structure into numbers. Raw rows → per-example statistics. Two columns → their ratio. A timestamp → hour of day. `qaz_letters.md` is a catalogue of this done to images: mean intensity, standard deviation, min/max, skewness, kurtosis, 16-bin histograms, Hu moments, radial distances, Fourier descriptors, projections, zoning, DCT, wavelets. Read that list as a menu — it is the jury telling you what handcrafted features they consider fair game.
 
-*Scale.* `StandardScaler` → mean 0, sd 1. `MinMaxScaler` → [0,1]. Needed by distance- and gradient-based models (kNN, SVM, logistic regression, k-means, PCA). **Not** needed by trees and boosting, which only compare thresholds. So: scaling is about the model, not the data.
+*Scale.* `StandardScaler` → mean 0, sd 1. `MinMaxScaler` → $[0, 1]$. Needed by distance- and gradient-based models (kNN, SVM, logistic regression, k-means, PCA). **Not** needed by trees and boosting, which only compare thresholds. So: scaling is about the model, not the data.
 
 *Encode.* Categories → numbers. One-hot for unordered with few levels; ordinal only when order is real. A label column like `ru`/`kaz`/`eng` is the target, not a feature — never encode it into X.
 
-**Selection.** Drop constant columns (`df.nunique() == 1`), drop near-duplicates (`|corr| > 0.98`), then rank what is left by model importance. Fewer, better features beat more features when the training set is small.
+**Selection.** Drop constant columns (`df.nunique() == 1`), drop near-duplicates ($|\text{corr}| > 0.98$), then rank what is left by model importance. Fewer, better features beat more features when the training set is small.
 
 Worked example — a derived feature that is better than any raw one. For IMU data, the acceleration *magnitude*
 
-```
-amag = sqrt(ax² + ay² + az²)
-```
+$$
+\text{amag} = \sqrt{a_x^2 + a_y^2 + a_z^2}
+$$
 
 is invariant to how the sensor was rotated on the body. `ax` alone depends on the mounting angle; `amag` does not. One line, and it removes a nuisance factor the raw columns cannot.
 
@@ -35,7 +35,7 @@ Open [`task5_Can_You_Become_AI_Yoga_Instructor.md`](../faio-2025/qualification/t
 What does the task force you to invent?
 
 1. The label is per repetition, the signals are per timestep → every feature must be an **aggregate over the repetition**.
-2. "Correct vs incorrect pose" is about *shape of motion*, not average level. So spread features (`std`, `max − min`, RMS) carry more signal than `mean`.
+2. "Correct vs incorrect pose" is about *shape of motion*, not average level. So spread features (`std`, $\max - \min$, RMS) carry more signal than `mean`.
 3. Sensors have 3 axes each, and mounting orientation is arbitrary → build rotation-robust features: magnitudes, and correlations between axes.
 4. Nothing says the segments are equal length → include `n_rows` as a feature; duration itself may separate the classes.
 

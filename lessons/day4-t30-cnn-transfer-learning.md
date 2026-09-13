@@ -10,9 +10,9 @@ Two anchors on purpose: one task where a pretrained network is the only route, a
 
 ## [concept-first]
 
-**Convolution.** Slide a small learnable kernel (3×3, say) over the image; at each position output the weighted sum of the patch. One kernel produces one *feature map*. Three properties follow, and they are the whole reason CNNs beat dense layers on pixels: weights are **shared** across positions (so a 3×3 kernel is 9 parameters regardless of image size), the response is **translation-equivariant** (an edge detected at the top-left is detected the same way at the bottom-right), and each output sees only a local patch.
+**Convolution.** Slide a small learnable kernel ($3 \times 3$, say) over the image; at each position output the weighted sum of the patch. One kernel produces one *feature map*. Three properties follow, and they are the whole reason CNNs beat dense layers on pixels: weights are **shared** across positions (so a $3 \times 3$ kernel is 9 parameters regardless of image size), the response is **translation-equivariant** (an edge detected at the top-left is detected the same way at the bottom-right), and each output sees only a local patch.
 
-**Pooling / stride.** `MaxPool2d(2)` halves height and width by taking the max of each 2×2 block. Stacking conv + pool grows the **receptive field**: layer 1 sees 3×3 pixels, layer 5 sees a large region. So early layers learn edges and colour blobs, middle layers textures and motifs, late layers object-level structure. That hierarchy is what you are borrowing when you use someone else's weights.
+**Pooling / stride.** `MaxPool2d(2)` halves height and width by taking the max of each $2 \times 2$ block. Stacking conv + pool grows the **receptive field**: layer 1 sees $3 \times 3$ pixels, layer 5 sees a large region. So early layers learn edges and colour blobs, middle layers textures and motifs, late layers object-level structure. That hierarchy is what you are borrowing when you use someone else's weights.
 
 **A backbone is the network minus its classifier head.** ResNet-50 ends with a global average pool producing a 2048-dim vector, then a 1000-way linear layer for ImageNet classes. Drop the linear layer and the **penultimate** 2048-dim vector is a general-purpose visual description of the image — that vector is the embedding of T22. You get it for free, with no labels and no training.
 
@@ -87,7 +87,7 @@ def embed(path, tta=4):
 
 ## [drill]
 
-1. Why does a 3×3 conv kernel have the same parameter count on a 64×64 and a 2048×2048 image?
+1. Why does a $3 \times 3$ conv kernel have the same parameter count on a $64 \times 64$ and a $2048 \times 2048$ image?
 2. What exactly do you take from ResNet-50 to get an embedding, and how many dimensions is it?
 3. You forget `m.eval()`. Name the layer type that misbehaves and what it does to your embeddings.
 4. The contest GPU has no internet. Which one line of the snippet fails, and what replaces it?
